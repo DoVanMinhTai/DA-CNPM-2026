@@ -1,0 +1,77 @@
+{
+  "name": "projects/4263695993353700263",
+  "projectId": "4263695993353700263",
+  "title": "AI CV Management System",
+  "visibility": "PUBLIC",
+  "createTime": "2026-05-11T07:00:43.895337Z",
+  "updateTime": "2026-05-16T06:36:18.315890Z",
+  "projectType": "TEXT_TO_UI_PRO",
+  "origin": "STITCH",
+  "deviceType": "DESKTOP",
+  "designTheme": {
+    "colorMode": "LIGHT",
+    "font": "INTER",
+    "roundness": "ROUND_FOUR",
+    "customColor": "#008080"
+  },
+  "screens": {
+    "home": {
+      "id": "cf146c10963346cbb2542cb0677ac5e8",
+      "sourceScreen": "projects/4263695993353700263/screens/cf146c10963346cbb2542cb0677ac5e8",
+      "x": 1024, "y": 0, "width": 1280, "height": 2630
+    },
+    "login": {
+      "id": "e9ba273fb7554e69a92e187bd9d64c42",
+      "sourceScreen": "projects/4263695993353700263/screens/e9ba273fb7554e69a92e187bd9d64c42",
+      "x": 2444, "y": 2709, "width": 1280, "height": 1024
+    },
+    "register": {
+      "id": "054d4e3fc34846c7b0864fb730ea9fbb",
+      "sourceScreen": "projects/4263695993353700263/screens/054d4e3fc34846c7b0864fb730ea9fbb",
+      "x": 986, "y": 2735, "width": 1280, "height": 1024
+    },
+    "dashboard": {
+      "id": "70b9a1dcd07c41dd966f62d56a9abd83",
+      "sourceScreen": "projects/4263695993353700263/screens/70b9a1dcd07c41dd966f62d56a9abd83",
+      "x": 5807, "y": 1272, "width": 1280, "height": 1024
+    },
+    "cv-editor": {
+      "id": "8abd1ed6fb3b4b2c9273bc0be869c7fb",
+      "sourceScreen": "projects/4263695993353700263/screens/8abd1ed6fb3b4b2c9273bc0be869c7fb",
+      "x": 7371, "y": -361, "width": 1280, "height": 1549
+    },
+    "cv-detail": {
+      "id": "32e6a969ac2641228b6b2e866e84bdc3",
+      "sourceScreen": "projects/4263695993353700263/screens/32e6a969ac2641228b6b2e866e84bdc3",
+      "x": 5768, "y": -339, "width": 1280, "height": 1329
+    },
+    "ai-analysis": {
+      "id": "f6fae380a77a47d48b8396fae674b988",
+      "sourceScreen": "projects/4263695993353700263/screens/f6fae380a77a47d48b8396fae674b988",
+      "x": 4119, "y": -245, "width": 1280, "height": 1024
+    },
+    "pricing": {
+      "id": "64acd70661c1472eb48328c499311e5a",
+      "sourceScreen": "projects/4263695993353700263/screens/64acd70661c1472eb48328c499311e5a",
+      "x": 2473, "y": 32, "width": 1280, "height": 2020
+    },
+    "billing": {
+      "id": "8542213dadda4ba3a5e0813378e9d96c",
+      "sourceScreen": "projects/4263695993353700263/screens/8542213dadda4ba3a5e0813378e9d96c",
+      "x": 4152, "y": 1332, "width": 1280, "height": 1090
+    },
+    "settings": {
+      "id": "5de2f286eb014451818db15157e08529",
+      "sourceScreen": "projects/4263695993353700263/screens/5de2f286eb014451818db15157e08529",
+      "x": 4007, "y": 2689, "width": 1280, "height": 1024
+    },
+    "change-password": {
+      "id": "6850114b0849469aac010bcd367c8b1c",
+      "sourceScreen": "projects/4263695993353700263/screens/6850114b0849469aac010bcd367c8b1c",
+      "x": 5510, "y": 2689, "width": 1280, "height": 1024
+    }
+  },
+  "metadata": {
+    "userRole": "OWNER"
+  }
+}
