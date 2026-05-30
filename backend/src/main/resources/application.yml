@@ -1,0 +1,76 @@
+spring:
+  application:
+    name: backend
+
+  # PostgreSQL
+  datasource:
+    url: jdbc:postgresql://localhost:5432/dacnpm_db
+    username: postgres
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  # JPA / Hibernate
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  # Redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ${REDIS_PASSWORD:}
+
+  # Mail (Gmail SMTP)
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  # OAuth2 Client (placeholder - will configure in Sub-Plan 3)
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:}
+            client-secret: ${GOOGLE_CLIENT_SECRET:}
+            scope: email, profile
+          facebook:
+            client-id: ${FACEBOOK_CLIENT_ID:}
+            client-secret: ${FACEBOOK_CLIENT_SECRET:}
+            scope: email, public_profile
+
+# JWT Config
+jwt:
+  secret: ${JWT_SECRET:myDefaultSuperSecretKeyThatIsAtLeast256BitsLongForHS256Algorithm}
+  access-token-expiration: 600000      # 10 minutes (ms)
+  refresh-token-expiration: 604800000  # 7 days (ms)
+  email-verification-expiration: 86400000  # 24 hours (ms)
+
+# App Config
+app:
+  frontend-url: http://localhost:5173
+  backend-url: http://localhost:8080
+
+# Swagger
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+server:
+  port: 8080
