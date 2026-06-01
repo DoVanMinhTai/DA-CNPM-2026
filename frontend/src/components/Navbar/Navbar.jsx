@@ -9,7 +9,7 @@ export default function Navbar() {
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      isHome ? 'bg-white/80 backdrop-blur-md' : 'bg-white shadow-sm border-b border-slate-100'
+      isHome ? 'bg-surface-container-lowest/80 backdrop-blur-md' : 'bg-surface-container-lowest shadow-sm border-b border-slate-100'
     }`}>
       <div className="max-w-[1440px] mx-auto px-6 md:px-10 h-16 flex items-center justify-between">
         {/* Logo */}
@@ -17,7 +17,7 @@ export default function Navbar() {
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
             <span className="text-white font-bold text-sm">C</span>
           </div>
-          <span className="text-xl font-bold text-secondary-dark group-hover:text-primary transition-colors">
+          <span className="text-xl font-bold text-on-surface group-hover:text-primary transition-colors">
             CareerAI
           </span>
         </Link>
@@ -63,7 +63,7 @@ export default function Navbar() {
             <>
               <Link
                 to="/login"
-                className="px-4 py-2 text-sm font-medium text-secondary-dark hover:text-primary transition-colors"
+                className="px-4 py-2 text-sm font-medium text-on-surface hover:text-primary transition-colors"
               >
                 Đăng nhập
               </Link>

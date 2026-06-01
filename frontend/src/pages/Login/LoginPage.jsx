@@ -94,7 +94,7 @@ export default function LoginPage() {
         </div>
 
         <Link to="/" className="flex items-center gap-2 relative z-10">
-          <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-surface-container-lowest/20 flex items-center justify-center">
             <span className="text-white font-bold text-sm">C</span>
           </div>
           <span className="text-lg font-bold text-white">CareerAI</span>
@@ -115,21 +115,20 @@ export default function LoginPage() {
       </div>
 
       {/* Right panel — form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-slate-950">
-        <div className="w-full max-w-md animate-fade-in text-slate-200">
+      <div className="flex-1 flex items-center justify-center p-8 bg-surface-lowest">
+        <div className="w-full max-w-md animate-fade-in text-on-surface">
           {/* Mobile logo */}
           <Link to="/" className="flex items-center gap-2 mb-10 lg:hidden">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <span className="text-white font-bold text-sm">C</span>
             </div>
-            <span className="text-xl font-bold text-white">CareerAI</span>
+            <span className="text-xl font-bold text-primary">CareerAI</span>
           </Link>
 
-          <h1 className="text-3xl font-bold text-white mb-2">Đăng nhập</h1>
-          <p className="text-slate-400 mb-8">Nhập thông tin tài khoản của bạn để tiếp tục.</p>
-
+          <h1 className="text-3xl font-bold text-on-surface mb-2">Đăng nhập</h1>
+          <p className="text-on-surface-variant mb-8">Nhập thông tin tài khoản của bạn để tiếp tục.</p>
           {error && (
-            <div className="flex flex-col gap-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl p-4 mb-6">
+            <div className="flex flex-col gap-3 bg-error-container border border-error/20 text-error rounded-xl p-4 mb-6">
               <div className="flex items-start gap-2.5">
                 <AlertCircle size={18} className="mt-0.5 shrink-0" />
                 <span className="text-sm font-medium">{error}</span>
@@ -140,7 +139,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={handleResendEmail}
                   disabled={isSubmitting}
-                  className="w-fit text-xs font-semibold text-indigo-400 hover:text-indigo-300 underline cursor-pointer text-left pl-7"
+                  className="w-fit text-xs font-semibold text-primary hover:text-primary-dark underline cursor-pointer text-left pl-7"
                 >
                   Gửi lại email xác nhận tài khoản
                 </button>
@@ -158,9 +157,9 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div>
-              <label htmlFor="login-email" className="block text-sm font-medium text-slate-350 mb-1.5">Email</label>
+              <label htmlFor="login-email" className="block text-sm font-medium text-on-surface-variant mb-1.5">Email</label>
               <div className="relative">
-                <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" />
                 <input
                   id="login-email"
                   type="email"
@@ -169,7 +168,7 @@ export default function LoginPage() {
                   placeholder="name@example.com"
                   disabled={isSubmitting}
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all"
+                  className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-xl text-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                 />
               </div>
             </div>
@@ -177,13 +176,13 @@ export default function LoginPage() {
             {/* Password */}
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <label htmlFor="login-password" className="block text-sm font-medium text-slate-350">Mật khẩu</label>
-                <a href="#" className="text-sm font-medium text-indigo-400 hover:text-indigo-300 transition-colors">
+                <label htmlFor="login-password" className="block text-sm font-medium text-on-surface-variant">Mật khẩu</label>
+                <a href="#" className="text-sm font-medium text-primary hover:text-primary-dark transition-colors">
                   Quên mật khẩu?
                 </a>
               </div>
               <div className="relative">
-                <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" />
                 <input
                   id="login-password"
                   type={showPassword ? 'text' : 'password'}
@@ -192,12 +191,12 @@ export default function LoginPage() {
                   placeholder="Nhập mật khẩu của bạn"
                   disabled={isSubmitting}
                   required
-                  className="w-full pl-10 pr-12 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all"
+                  className="w-full pl-10 pr-12 py-3 bg-surface border border-outline-variant rounded-xl text-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -206,15 +205,15 @@ export default function LoginPage() {
 
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 bg-slate-900 border border-slate-850 rounded text-indigo-500 focus:ring-indigo-500/50" />
-                <span className="text-sm text-slate-400">Ghi nhớ đăng nhập</span>
+                <input type="checkbox" className="w-4 h-4 bg-surface border border-outline-variant rounded text-primary focus:ring-primary/50" />
+                <span className="text-sm text-on-surface-variant">Ghi nhớ đăng nhập</span>
               </label>
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg shadow-indigo-600/20 hover:shadow-indigo-500/30 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg shadow-primary/20 hover:shadow-primary-dark/30 flex items-center justify-center gap-2 cursor-pointer"
             >
               {isSubmitting ? (
                 <>
@@ -228,17 +227,17 @@ export default function LoginPage() {
 
             {/* Divider */}
             <div className="relative flex items-center py-2">
-              <div className="flex-1 border-t border-slate-800"></div>
-              <span className="px-4 text-xs font-semibold uppercase tracking-wider text-slate-600">Hoặc tiếp tục bằng</span>
-              <div className="flex-1 border-t border-slate-800"></div>
+              <div className="flex-1 border-t border-outline-variant"></div>
+              <span className="px-4 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Hoặc tiếp tục bằng</span>
+              <div className="flex-1 border-t border-outline-variant"></div>
             </div>
 
             {/* OAuth2 Buttons */}
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => { window.location.href = '/oauth2/authorization/google' }}
-                className="flex items-center justify-center gap-2 py-3 px-4 bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 rounded-xl text-sm font-semibold text-slate-300 transition-all duration-200 cursor-pointer"
+                onClick={() => { window.location.href = 'http://localhost:8080/oauth2/authorization/google' }}
+                className="flex items-center justify-center gap-2 py-3 px-4 bg-surface-lowest hover:bg-surface-container-low border border-outline hover:border-outline-variant rounded-xl text-sm font-semibold text-on-surface transition-all duration-200 cursor-pointer"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -251,8 +250,8 @@ export default function LoginPage() {
 
               <button
                 type="button"
-                onClick={() => { window.location.href = '/oauth2/authorization/facebook' }}
-                className="flex items-center justify-center gap-2 py-3 px-4 bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 rounded-xl text-sm font-semibold text-slate-300 transition-all duration-200 cursor-pointer"
+                onClick={() => { window.location.href = 'http://localhost:8080/oauth2/authorization/facebook' }}
+                className="flex items-center justify-center gap-2 py-3 px-4 bg-surface-lowest hover:bg-surface-container-low border border-outline hover:border-outline-variant rounded-xl text-sm font-semibold text-on-surface transition-all duration-200 cursor-pointer"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2" />
@@ -262,15 +261,15 @@ export default function LoginPage() {
             </div>
           </form>
 
-          <p className="mt-8 text-center text-sm text-slate-400">
+          <p className="mt-8 text-center text-sm text-on-surface-variant">
             Chưa có tài khoản?{' '}
-            <Link to="/register" className="font-semibold text-indigo-400 hover:text-indigo-300 transition-colors">
+            <Link to="/register" className="font-semibold text-primary hover:text-primary-dark transition-colors">
               Đăng ký ngay
             </Link>
           </p>
 
           <div className="mt-10 text-center">
-            <a href="#" className="text-xs text-slate-650 hover:text-slate-400 transition-colors">Trung tâm hỗ trợ CareerAI</a>
+            <a href="#" className="text-xs text-on-surface-variant hover:text-primary transition-all duration-200">Trung tâm hỗ trợ CareerAI</a>
           </div>
         </div>
       </div>

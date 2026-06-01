@@ -48,7 +48,7 @@ export default function CVEditorPage() {
   return (
     <div className="flex flex-col h-full bg-surface-container-highest overflow-hidden">
       {/* ========== HEADER TOOLBAR ========== */}
-      <header className="bg-surface shadow-sm px-6 lg:px-10 py-3 flex items-center justify-between z-30 border-b border-outline-variant/30 flex-shrink-0">
+      <header className="bg-surface shadow-sm px-6 lg:px-10 py-3 flex items-center justify-between z-30 border-b border-outline-variant flex-shrink-0">
         {/* Left: File info */}
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -106,7 +106,7 @@ export default function CVEditorPage() {
                 <ChevronDown size={14} />
               </button>
               {/* Export Dropdown */}
-              <div className="hidden group-hover:block absolute right-0 top-full mt-2 w-44 bg-white border border-outline-variant/40 shadow-xl rounded-xl overflow-hidden py-1.5 z-50">
+              <div className="hidden group-hover:block absolute right-0 top-full mt-2 w-44 bg-surface-container-lowest border border-outline-variant/40 shadow-xl rounded-xl overflow-hidden py-1.5 z-50">
                 <button className="w-full px-4 py-2 hover:bg-surface-container flex items-center gap-2.5 text-xs text-left transition-colors">
                   <FileText size={14} className="text-primary" /> PDF
                 </button>
@@ -128,7 +128,7 @@ export default function CVEditorPage() {
         {/* ===== LEFT SIDEBAR ===== */}
         <aside className="flex border-r border-outline-variant/40 bg-surface z-20 flex-shrink-0">
           {/* Column 1: Vertical Toolbar */}
-          <div className="w-14 flex flex-col items-center py-5 gap-4 border-r border-outline-variant/30">
+          <div className="w-14 flex flex-col items-center py-5 gap-4 border-r border-outline-variant">
             {tools.map((tool) => (
               <button
                 key={tool.id}
@@ -160,7 +160,7 @@ export default function CVEditorPage() {
                 className={`relative group cursor-pointer ${activePage === 1 ? '' : 'opacity-60 hover:opacity-100'} transition-opacity`}
                 onClick={() => setActivePage(1)}
               >
-                <div className={`aspect-[1/1.414] bg-white rounded shadow-sm overflow-hidden p-1.5 border-2 ${activePage === 1 ? 'border-primary' : 'border-outline-variant/40'} transition-colors`}>
+                <div className={`aspect-[1/1.414] bg-surface-container-lowest rounded shadow-sm overflow-hidden p-1.5 border-2 ${activePage === 1 ? 'border-primary' : 'border-outline-variant/40'} transition-colors`}>
                   <div className="w-full h-full bg-surface-container rounded-sm flex flex-col items-center justify-center p-2 gap-1">
                     <div className="w-full h-2 bg-primary/20 rounded" />
                     <div className="w-3/4 h-1.5 bg-outline-variant/30 rounded" />
@@ -185,7 +185,7 @@ export default function CVEditorPage() {
                 className={`relative group cursor-pointer ${activePage === 2 ? '' : 'opacity-60 hover:opacity-100'} transition-opacity`}
                 onClick={() => setActivePage(2)}
               >
-                <div className={`aspect-[1/1.414] bg-white rounded shadow-sm overflow-hidden p-1.5 border-2 ${activePage === 2 ? 'border-primary' : 'border-outline-variant/40'} transition-colors`}>
+                <div className={`aspect-[1/1.414] bg-surface-container-lowest rounded shadow-sm overflow-hidden p-1.5 border-2 ${activePage === 2 ? 'border-primary' : 'border-outline-variant/40'} transition-colors`}>
                   <div className="w-full h-full bg-surface-container rounded-sm flex flex-col items-center justify-center p-2 gap-1">
                     <div className="w-full h-1.5 bg-primary/15 rounded" />
                     <div className="w-full h-1 bg-outline-variant/20 rounded" />
@@ -205,7 +205,7 @@ export default function CVEditorPage() {
               </div>
 
               {/* Add Page */}
-              <button className="w-full aspect-[1/1.414] border-2 border-dashed border-outline-variant/50 rounded flex flex-col items-center justify-center gap-1 text-outline hover:border-primary hover:text-primary hover:bg-primary/5 transition-all">
+              <button className="w-full aspect-[1/1.414] border-2 border-dashed border-outline-variant rounded flex flex-col items-center justify-center gap-1 text-outline hover:border-primary hover:text-primary hover:bg-primary/5 transition-all">
                 <Plus size={18} />
                 <span className="text-[9px] font-bold">Add Page</span>
               </button>
@@ -216,7 +216,7 @@ export default function CVEditorPage() {
         {/* ===== MAIN CANVAS ===== */}
         <main className="flex-1 overflow-auto p-6 lg:p-10 flex justify-center items-start relative bg-surface-container-highest">
           <div
-            className="bg-white shadow-lg relative flex flex-col gap-6 select-none transition-transform duration-200"
+            className="bg-surface-container-lowest shadow-lg relative flex flex-col gap-6 select-none transition-transform duration-200"
             style={{
               width: `${794 * (zoom / 100)}px`,
               aspectRatio: '1 / 1.414',
@@ -390,7 +390,7 @@ export default function CVEditorPage() {
 
         {/* ===== RIGHT SIDEBAR (Properties Panel) ===== */}
         <aside className="hidden lg:flex w-72 xl:w-80 border-l border-outline-variant/40 bg-surface flex-col z-20 flex-shrink-0">
-          <div className="p-5 border-b border-outline-variant/30 flex-1 overflow-y-auto">
+          <div className="p-5 border-b border-outline-variant flex-1 overflow-y-auto">
             <h3 className="font-bold text-sm text-primary mb-5">Text Properties</h3>
             <div className="space-y-5">
               {/* Font Family */}
@@ -511,7 +511,7 @@ export default function CVEditorPage() {
           </div>
 
           {/* Delete Element */}
-          <div className="p-5 border-t border-outline-variant/30">
+          <div className="p-5 border-t border-outline-variant">
             <button className="w-full py-3 border-2 border-error text-error rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-error hover:text-white transition-all text-sm">
               <Trash2 size={16} />
               Delete Element
@@ -530,7 +530,7 @@ export default function CVEditorPage() {
           />
           {/* Modal */}
           <div className="bg-surface w-full max-w-lg rounded-2xl shadow-2xl relative z-10 overflow-hidden animate-fade-in">
-            <div className="p-5 border-b border-outline-variant/30 flex items-center justify-between">
+            <div className="p-5 border-b border-outline-variant flex items-center justify-between">
               <h2 className="text-base font-bold">Upload Portfolio Image</h2>
               <button
                 onClick={() => setShowUploadModal(false)}
@@ -553,7 +553,7 @@ export default function CVEditorPage() {
                     Supports JPG, PNG (Max 5MB)
                   </p>
                 </div>
-                <button className="px-5 py-1.5 bg-secondary-container text-secondary-dark rounded-full font-bold text-xs hover:opacity-90 transition-opacity">
+                <button className="px-5 py-1.5 bg-secondary-container text-on-surface rounded-full font-bold text-xs hover:opacity-90 transition-opacity">
                   Browse Files
                 </button>
                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" />

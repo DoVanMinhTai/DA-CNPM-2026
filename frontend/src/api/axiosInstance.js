@@ -18,8 +18,8 @@ export const clearAccessToken = () => {
 };
 
 const axiosInstance = axios.create({
-  baseURL: '', // Using Vite proxy in development, absolute in production
-  withCredentials: true, // QUAN TRỌNG: Gửi cookies kèm theo mọi request
+  baseURL: 'http://localhost:8080',
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -79,7 +79,7 @@ axiosInstance.interceptors.response.use(
         });
 
         accessToken = data.accessToken;
-        
+
         // Retry all queued requests with new token
         failedQueue.forEach(({ resolve }) => resolve());
         failedQueue = [];
@@ -91,7 +91,7 @@ axiosInstance.interceptors.response.use(
         accessToken = null;
         failedQueue.forEach(({ reject }) => reject(refreshError));
         failedQueue = [];
-        
+
         // Xóa thông tin auth và chuyển hướng về trang đăng nhập
         window.dispatchEvent(new CustomEvent('auth-logout'));
         window.location.href = '/login?session_expired=true';
