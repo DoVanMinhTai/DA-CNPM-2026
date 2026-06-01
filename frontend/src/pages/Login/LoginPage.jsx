@@ -115,7 +115,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right panel — form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-slate-950">
+      <div className="flex-1 flex items-center justify-center p-8 ">
         <div className="w-full max-w-md animate-fade-in text-slate-200">
           {/* Mobile logo */}
           <Link to="/" className="flex items-center gap-2 mb-10 lg:hidden">
@@ -125,9 +125,9 @@ export default function LoginPage() {
             <span className="text-xl font-bold text-white">CareerAI</span>
           </Link>
 
-          <h1 className="text-3xl font-bold text-white mb-2">Đăng nhập</h1>
-          <p className="text-slate-400 mb-8">Nhập thông tin tài khoản của bạn để tiếp tục.</p>
-
+          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-linear-to-br from-primary-dark to-primary mb-2">Đăng nhập</h1>
+          <p className="text-slate-900 mb-8">Nhập thông tin tài khoản của bạn để tiếp tục.</p>
+          ``
           {error && (
             <div className="flex flex-col gap-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl p-4 mb-6">
               <div className="flex items-start gap-2.5">
@@ -158,7 +158,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div>
-              <label htmlFor="login-email" className="block text-sm font-medium text-slate-350 mb-1.5">Email</label>
+              <label htmlFor="login-email" className="block text-sm font-medium text-slate-900 mb-1.5">Email</label>
               <div className="relative">
                 <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                 <input
@@ -169,7 +169,7 @@ export default function LoginPage() {
                   placeholder="name@example.com"
                   disabled={isSubmitting}
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-200 border border-slate-800 rounded-xl text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all"
                 />
               </div>
             </div>
@@ -177,7 +177,7 @@ export default function LoginPage() {
             {/* Password */}
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <label htmlFor="login-password" className="block text-sm font-medium text-slate-350">Mật khẩu</label>
+                <label htmlFor="login-password" className="block text-sm font-medium text-slate-900">Mật khẩu</label>
                 <a href="#" className="text-sm font-medium text-indigo-400 hover:text-indigo-300 transition-colors">
                   Quên mật khẩu?
                 </a>
@@ -192,7 +192,7 @@ export default function LoginPage() {
                   placeholder="Nhập mật khẩu của bạn"
                   disabled={isSubmitting}
                   required
-                  className="w-full pl-10 pr-12 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all"
+                  className="w-full pl-10 pr-12 py-3 bg-slate-200 border border-slate-800 rounded-xl text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all"
                 />
                 <button
                   type="button"
@@ -237,8 +237,8 @@ export default function LoginPage() {
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => { window.location.href = '/oauth2/authorization/google' }}
-                className="flex items-center justify-center gap-2 py-3 px-4 bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 rounded-xl text-sm font-semibold text-slate-300 transition-all duration-200 cursor-pointer"
+                onClick={() => { window.location.href = 'http://localhost:8080/oauth2/authorization/google' }}
+                className="flex items-center justify-center gap-2 py-3 px-4 bg-slate-100 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 rounded-xl text-sm font-semibold text-slate-900 transition-all duration-200 cursor-pointer"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -251,8 +251,8 @@ export default function LoginPage() {
 
               <button
                 type="button"
-                onClick={() => { window.location.href = '/oauth2/authorization/facebook' }}
-                className="flex items-center justify-center gap-2 py-3 px-4 bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 rounded-xl text-sm font-semibold text-slate-300 transition-all duration-200 cursor-pointer"
+                onClick={() => { window.location.href = 'http://localhost:8080/oauth2/authorization/facebook' }}
+                className="flex items-center justify-center gap-2 py-3 px-4 bg-slate-100 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 rounded-xl text-sm font-semibold text-slate-900 transition-all duration-200 cursor-pointer"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2" />
@@ -262,7 +262,7 @@ export default function LoginPage() {
             </div>
           </form>
 
-          <p className="mt-8 text-center text-sm text-slate-400">
+          <p className="mt-8 text-center text-sm text-slate-900">
             Chưa có tài khoản?{' '}
             <Link to="/register" className="font-semibold text-indigo-400 hover:text-indigo-300 transition-colors">
               Đăng ký ngay
@@ -270,7 +270,7 @@ export default function LoginPage() {
           </p>
 
           <div className="mt-10 text-center">
-            <a href="#" className="text-xs text-slate-650 hover:text-slate-400 transition-colors">Trung tâm hỗ trợ CareerAI</a>
+            <a href="#" className="text-xs text-slate-900 hover:text-slate-500 transition-all duration-200">Trung tâm hỗ trợ CareerAI</a>
           </div>
         </div>
       </div>
