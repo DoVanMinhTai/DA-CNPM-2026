@@ -44,7 +44,7 @@ export default function ChangePasswordPage() {
           <ArrowLeft size={20} className="text-on-surface-variant" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-secondary-dark">Change Password</h1>
+          <h1 className="text-2xl font-bold text-on-surface">Change Password</h1>
           <p className="text-on-surface-variant text-sm mt-0.5">Update your account password for security.</p>
         </div>
       </div>
@@ -63,8 +63,8 @@ export default function ChangePasswordPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white rounded-lg border border-outline-variant/30 p-6">
-          <h2 className="text-lg font-bold text-secondary-dark mb-5 flex items-center gap-2">
+        <div className="bg-surface-container-lowest rounded-lg border border-outline-variant p-6">
+          <h2 className="text-lg font-bold text-on-surface mb-5 flex items-center gap-2">
             <Shield size={18} className="text-primary" />
             Password Security
           </h2>
@@ -72,10 +72,10 @@ export default function ChangePasswordPage() {
           <div className="space-y-4">
             {/* Current password */}
             <div>
-              <label htmlFor="current-password" className="block text-sm font-medium text-secondary-dark mb-1.5">Current Password</label>
+              <label htmlFor="current-password" className="block text-sm font-medium text-on-surface mb-1.5">Current Password</label>
               <div className="relative">
                 <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" />
-                <input id="current-password" type={showCurrent ? 'text' : 'password'} value={form.current} onChange={updateField('current')} placeholder="Enter current password" className="w-full pl-10 pr-12 py-3 bg-surface border border-outline-variant/50 rounded text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
+                <input id="current-password" type={showCurrent ? 'text' : 'password'} value={form.current} onChange={updateField('current')} placeholder="Enter current password" className="w-full pl-10 pr-12 py-3 bg-surface border border-outline-variant rounded text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
                 <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors">
                   {showCurrent ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -84,10 +84,10 @@ export default function ChangePasswordPage() {
 
             {/* New password */}
             <div>
-              <label htmlFor="new-password" className="block text-sm font-medium text-secondary-dark mb-1.5">New Password</label>
+              <label htmlFor="new-password" className="block text-sm font-medium text-on-surface mb-1.5">New Password</label>
               <div className="relative">
                 <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" />
-                <input id="new-password" type={showNew ? 'text' : 'password'} value={form.newPass} onChange={updateField('newPass')} placeholder="Enter new password" className="w-full pl-10 pr-12 py-3 bg-surface border border-outline-variant/50 rounded text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
+                <input id="new-password" type={showNew ? 'text' : 'password'} value={form.newPass} onChange={updateField('newPass')} placeholder="Enter new password" className="w-full pl-10 pr-12 py-3 bg-surface border border-outline-variant rounded text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
                 <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors">
                   {showNew ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -110,10 +110,10 @@ export default function ChangePasswordPage() {
 
             {/* Confirm password */}
             <div>
-              <label htmlFor="confirm-password" className="block text-sm font-medium text-secondary-dark mb-1.5">Confirm New Password</label>
+              <label htmlFor="confirm-password" className="block text-sm font-medium text-on-surface mb-1.5">Confirm New Password</label>
               <div className="relative">
                 <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" />
-                <input id="confirm-password" type={showConfirm ? 'text' : 'password'} value={form.confirm} onChange={updateField('confirm')} placeholder="Confirm new password" className="w-full pl-10 pr-12 py-3 bg-surface border border-outline-variant/50 rounded text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
+                <input id="confirm-password" type={showConfirm ? 'text' : 'password'} value={form.confirm} onChange={updateField('confirm')} placeholder="Confirm new password" className="w-full pl-10 pr-12 py-3 bg-surface border border-outline-variant rounded text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
                 <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors">
                   {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -126,8 +126,8 @@ export default function ChangePasswordPage() {
         </div>
 
         {/* Requirements */}
-        <div className="bg-white rounded-lg border border-outline-variant/30 p-5">
-          <h3 className="text-sm font-bold text-secondary-dark mb-3">Password Requirements</h3>
+        <div className="bg-surface-container-lowest rounded-lg border border-outline-variant p-5">
+          <h3 className="text-sm font-bold text-on-surface mb-3">Password Requirements</h3>
           <div className="grid grid-cols-2 gap-2">
             {requirements.map((req) => (
               <div key={req.text} className="flex items-center gap-2 text-sm">
