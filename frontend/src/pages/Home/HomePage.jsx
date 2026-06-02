@@ -14,7 +14,7 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-6 md:px-10 max-w-[1440px] mx-auto w-full">
         <div className="max-w-3xl mx-auto text-center animate-fade-in">
-          <h1 className="text-4xl md:text-5xl lg:text-[56px] font-bold text-secondary-dark leading-tight tracking-tight mb-6">
+          <h1 className="text-4xl md:text-5xl lg:text-[56px] font-bold text-on-surface leading-tight tracking-tight mb-6">
             {heroData.title}
           </h1>
           <p className="text-lg text-on-surface-variant leading-relaxed mb-10 max-w-2xl mx-auto">
@@ -35,7 +35,7 @@ export default function HomePage() {
           <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-accent/10 rounded-full blur-2xl animate-float delay-300" />
 
           {/* Hero visual — mock dashboard card */}
-          <div className="bg-white rounded-xl shadow-xl border border-surface-container p-6 md:p-8">
+          <div className="bg-surface-container-lowest rounded-xl shadow-xl border border-surface-container p-6 md:p-8">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-3 h-3 rounded-full bg-error" />
               <div className="w-3 h-3 rounded-full bg-accent" />
@@ -67,10 +67,10 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 bg-white">
+      <section id="features" className="py-20 bg-surface-container-lowest">
         <div className="max-w-[1440px] mx-auto px-6 md:px-10">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-secondary-dark mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-on-surface mb-4">
               Precision Tools for Modern Professionals
             </h2>
             <p className="text-lg text-on-surface-variant max-w-2xl mx-auto">
@@ -84,13 +84,13 @@ export default function HomePage() {
               return (
                 <div
                   key={feature.title}
-                  className="group p-6 bg-surface rounded-lg border border-outline-variant/30 hover:border-primary/30 hover:shadow-lg transition-all duration-300 animate-fade-in"
+                  className="group p-6 bg-surface rounded-lg border border-outline-variant hover:border-primary/30 hover:shadow-lg transition-all duration-300 animate-fade-in"
                   style={{ animationDelay: `${i * 100}ms` }}
                 >
                   <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
                     <Icon size={22} className="text-primary" />
                   </div>
-                  <h3 className="text-lg font-bold text-secondary-dark mb-2">{feature.title}</h3>
+                  <h3 className="text-lg font-bold text-on-surface mb-2">{feature.title}</h3>
                   <p className="text-sm text-on-surface-variant leading-relaxed">{feature.description}</p>
                 </div>
               )
@@ -103,7 +103,7 @@ export default function HomePage() {
       <section className="py-20">
         <div className="max-w-[1440px] mx-auto px-6 md:px-10">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-secondary-dark mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-on-surface mb-4">
               {editorPreview.title}
             </h2>
             <p className="text-lg text-on-surface-variant max-w-2xl mx-auto">
@@ -113,10 +113,10 @@ export default function HomePage() {
 
           <div className="max-w-4xl mx-auto grid md:grid-cols-5 gap-6">
             {/* Experience preview */}
-            <div className="md:col-span-3 bg-white rounded-lg border border-outline-variant/30 p-6 shadow-sm">
+            <div className="md:col-span-3 bg-surface-container-lowest rounded-lg border border-outline-variant p-6 shadow-sm">
               <h3 className="text-xs font-bold uppercase tracking-wider text-outline mb-4">Professional Experience</h3>
               <div className="mb-4">
-                <h4 className="text-lg font-bold text-secondary-dark">{editorPreview.experience.role}</h4>
+                <h4 className="text-lg font-bold text-on-surface">{editorPreview.experience.role}</h4>
                 <p className="text-sm text-on-surface-variant">{editorPreview.experience.company} | {editorPreview.experience.period}</p>
               </div>
               <ul className="space-y-2.5 mb-4">
@@ -130,16 +130,16 @@ export default function HomePage() {
               {/* AI Tip */}
               <div className="flex items-start gap-3 p-3.5 bg-accent/10 rounded-lg border border-accent/20">
                 <Lightbulb size={18} className="text-accent flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-secondary-dark leading-relaxed">{editorPreview.experience.aiTip}</p>
+                <p className="text-xs text-on-surface leading-relaxed">{editorPreview.experience.aiTip}</p>
               </div>
             </div>
 
             {/* Skills preview */}
-            <div className="md:col-span-2 bg-white rounded-lg border border-outline-variant/30 p-6 shadow-sm">
+            <div className="md:col-span-2 bg-surface-container-lowest rounded-lg border border-outline-variant p-6 shadow-sm">
               <h3 className="text-xs font-bold uppercase tracking-wider text-outline mb-4">Core Competencies</h3>
               <div className="flex flex-wrap gap-2">
                 {editorPreview.skills.map((skill) => (
-                  <span key={skill} className="px-3 py-1.5 bg-surface-container text-sm text-secondary-dark rounded-full font-medium">
+                  <span key={skill} className="px-3 py-1.5 bg-surface-container text-sm text-on-surface rounded-full font-medium">
                     {skill}
                   </span>
                 ))}
@@ -160,7 +160,7 @@ export default function HomePage() {
           </p>
           <Link
             to="/register"
-            className="inline-flex items-center gap-2 px-8 py-3.5 bg-white text-primary font-semibold rounded shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+            className="inline-flex items-center gap-2 px-8 py-3.5 bg-surface-container-lowest text-primary font-semibold rounded shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
           >
             Get Started Free
             <ArrowRight size={18} />

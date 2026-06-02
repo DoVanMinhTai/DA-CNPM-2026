@@ -52,7 +52,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         // Clear OAuth2 cookies
-        authorizationRequestRepository.removeAuthorizationRequestCookies(request, response);
+        // authorizationRequestRepository.removeAuthorizationRequestCookies(request, response);
 
         // Redirect browser to frontend success callback page
         String targetUrl = frontendUrl + "/oauth2/callback?success=true";

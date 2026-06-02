@@ -8,9 +8,9 @@ import { pricingPlans, faqData } from '../../data/mockData'
 function FAQItem({ question, answer }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="border border-outline-variant/30 rounded-lg overflow-hidden">
+    <div className="border border-outline-variant rounded-lg overflow-hidden">
       <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between p-5 text-left hover:bg-surface-container-low transition-colors">
-        <span className="text-sm font-medium text-secondary-dark">{question}</span>
+        <span className="text-sm font-medium text-on-surface">{question}</span>
         {open ? <ChevronUp size={18} className="text-outline" /> : <ChevronDown size={18} className="text-outline" />}
       </button>
       {open && (
@@ -31,7 +31,7 @@ export default function PricingPage() {
 
       <section className="pt-32 pb-16 px-6 md:px-10 max-w-[1440px] mx-auto w-full">
         <div className="text-center mb-12 animate-fade-in">
-          <h1 className="text-3xl md:text-4xl font-bold text-secondary-dark mb-4">
+          <h1 className="text-3xl md:text-4xl font-bold text-on-surface mb-4">
             Simple, Transparent Pricing
           </h1>
           <p className="text-lg text-on-surface-variant max-w-2xl mx-auto mb-8">
@@ -45,7 +45,7 @@ export default function PricingPage() {
               onClick={() => setAnnual(!annual)}
               className={`w-12 h-6 rounded-full transition-colors relative ${annual ? 'bg-primary' : 'bg-outline-variant'}`}
             >
-              <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform shadow-sm ${annual ? 'translate-x-6' : 'translate-x-0.5'}`} />
+              <div className={`w-5 h-5 bg-surface-container-lowest rounded-full absolute top-0.5 transition-transform shadow-sm ${annual ? 'translate-x-6' : 'translate-x-0.5'}`} />
             </button>
             <span className={`text-sm font-medium ${annual ? 'text-on-surface' : 'text-outline'}`}>Annual</span>
             {annual && <span className="text-xs text-primary font-semibold bg-primary/10 px-2 py-0.5 rounded-full">Save 20%</span>}
@@ -57,10 +57,10 @@ export default function PricingPage() {
           {pricingPlans.map((plan, i) => (
             <div
               key={plan.name}
-              className={`relative bg-white rounded-xl border p-6 md:p-8 transition-all duration-300 hover:shadow-lg animate-fade-in ${
+              className={`relative bg-surface-container-lowest rounded-xl border p-6 md:p-8 transition-all duration-300 hover:shadow-lg animate-fade-in ${
                 plan.popular
                   ? 'border-primary shadow-md scale-105 z-10'
-                  : 'border-outline-variant/30 hover:border-primary/30'
+                  : 'border-outline-variant hover:border-primary/30'
               }`}
               style={{ animationDelay: `${i * 100}ms` }}
             >
@@ -70,9 +70,9 @@ export default function PricingPage() {
                   Most Popular
                 </div>
               )}
-              <h3 className="text-lg font-bold text-secondary-dark">{plan.name}</h3>
+              <h3 className="text-lg font-bold text-on-surface">{plan.name}</h3>
               <div className="mt-4 mb-2">
-                <span className="text-4xl font-bold text-secondary-dark">
+                <span className="text-4xl font-bold text-on-surface">
                   ${annual && plan.price !== '0' ? Math.round(Number(plan.price) * 0.8) : plan.price}
                 </span>
                 <span className="text-sm text-outline ml-1">{plan.period}</span>
@@ -93,7 +93,7 @@ export default function PricingPage() {
                 className={`block w-full text-center py-3 text-sm font-semibold rounded transition-all duration-200 ${
                   plan.popular
                     ? 'bg-primary text-white hover:bg-primary-dark shadow-sm hover:shadow-md'
-                    : 'bg-surface-container text-secondary-dark hover:bg-surface-container-high'
+                    : 'bg-surface-container text-on-surface hover:bg-surface-container-high'
                 }`}
               >
                 {plan.cta}
@@ -104,7 +104,7 @@ export default function PricingPage() {
 
         {/* FAQ */}
         <div className="max-w-2xl mx-auto">
-          <h2 className="text-2xl font-bold text-secondary-dark text-center mb-8">Frequently Asked Questions</h2>
+          <h2 className="text-2xl font-bold text-on-surface text-center mb-8">Frequently Asked Questions</h2>
           <div className="space-y-3">
             {faqData.map((faq) => (
               <FAQItem key={faq.question} {...faq} />

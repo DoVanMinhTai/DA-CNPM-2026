@@ -21,7 +21,7 @@ export default function DashboardPage() {
     <div className="p-6 md:p-8 max-w-[1200px]">
       {/* Header */}
       <div className="mb-8 animate-fade-in">
-        <h1 className="text-2xl md:text-3xl font-bold text-secondary-dark">
+        <h1 className="text-2xl md:text-3xl font-bold text-on-surface">
           Hello, {dashboardUser.name}
         </h1>
         <p className="text-on-surface-variant mt-1">Manage and optimize your professional documents.</p>
@@ -34,7 +34,7 @@ export default function DashboardPage() {
           return (
             <div
               key={stat.label}
-              className="bg-white rounded-lg border border-outline-variant/30 p-5 hover:shadow-md transition-all duration-300 animate-fade-in"
+              className="bg-surface-container-lowest rounded-lg border border-outline-variant p-5 hover:shadow-md transition-all duration-300 animate-fade-in"
               style={{ animationDelay: `${i * 80}ms` }}
             >
               <div className="flex items-center justify-between mb-3">
@@ -42,7 +42,7 @@ export default function DashboardPage() {
                   <Icon size={20} className="text-primary" />
                 </div>
               </div>
-              <p className="text-2xl font-bold text-secondary-dark">{stat.value}</p>
+              <p className="text-2xl font-bold text-on-surface">{stat.value}</p>
               <p className="text-xs text-outline mt-0.5">{stat.label}</p>
               <p className="text-xs text-primary mt-2">{stat.change}</p>
             </div>
@@ -53,7 +53,7 @@ export default function DashboardPage() {
       {/* Recent Documents */}
       <div className="animate-fade-in delay-300">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-xl font-bold text-secondary-dark">Recent Documents</h2>
+          <h2 className="text-xl font-bold text-on-surface">Recent Documents</h2>
           <Link
             to="/cv/editor"
             className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded hover:bg-primary-dark transition-all duration-200"
@@ -68,7 +68,7 @@ export default function DashboardPage() {
             <Link
               key={doc.id}
               to={`/cv/${doc.id}`}
-              className="bg-white rounded-lg border border-outline-variant/30 p-5 hover:shadow-md hover:border-primary/30 transition-all duration-300 group"
+              className="bg-surface-container-lowest rounded-lg border border-outline-variant p-5 hover:shadow-md hover:border-primary transition-all duration-300 group"
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center">
@@ -78,7 +78,7 @@ export default function DashboardPage() {
                   <MoreVertical size={16} />
                 </button>
               </div>
-              <h3 className="text-base font-semibold text-secondary-dark mb-1 group-hover:text-primary transition-colors">
+              <h3 className="text-base font-semibold text-on-surface mb-1 group-hover:text-primary transition-colors">
                 {doc.title}
               </h3>
               <p className="text-xs text-outline mb-3">Updated {doc.updatedAt}</p>
@@ -97,13 +97,13 @@ export default function DashboardPage() {
           {/* New CV Card */}
           <Link
             to="/cv/editor"
-            className="bg-white rounded-lg border-2 border-dashed border-outline-variant/50 p-5 flex flex-col items-center justify-center gap-3 hover:border-primary/40 hover:bg-primary/5 transition-all duration-300 min-h-[180px] group"
+            className="bg-surface-container-lowest rounded-lg border-2 border-dashed border-outline-variant p-5 flex flex-col items-center justify-center gap-3 hover:border-primary hover:bg-surface-container-low transition-all duration-300 min-h-[180px] group"
           >
             <div className="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center group-hover:bg-primary/10 transition-colors">
               <Plus size={24} className="text-outline group-hover:text-primary transition-colors" />
             </div>
             <div className="text-center">
-              <p className="text-sm font-semibold text-secondary-dark">Start from scratch</p>
+              <p className="text-sm font-semibold text-on-surface">Start from scratch</p>
               <p className="text-xs text-outline mt-0.5">Or import LinkedIn profile</p>
             </div>
           </Link>

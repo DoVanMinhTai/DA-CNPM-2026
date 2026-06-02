@@ -17,7 +17,7 @@ export default function AIAnalysisPage() {
   return (
     <div className="p-6 md:p-8 max-w-[1100px] animate-fade-in">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-secondary-dark flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-on-surface flex items-center gap-2">
           <Sparkles size={24} className="text-primary" />
           AI Analysis
         </h1>
@@ -48,8 +48,8 @@ export default function AIAnalysisPage() {
         {/* Left column */}
         <div className="lg:col-span-2 space-y-6">
           {/* Category breakdown */}
-          <div className="bg-white rounded-lg border border-outline-variant/30 p-6">
-            <h2 className="text-lg font-bold text-secondary-dark mb-5">Score Breakdown</h2>
+          <div className="bg-surface-container-lowest rounded-lg border border-outline-variant p-6">
+            <h2 className="text-lg font-bold text-on-surface mb-5">Score Breakdown</h2>
             <div className="space-y-4">
               {analysisResults.categories.map((cat) => {
                 let barColor = 'bg-error'
@@ -59,7 +59,7 @@ export default function AIAnalysisPage() {
                 return (
                   <div key={cat.name}>
                     <div className="flex items-center justify-between text-sm mb-1.5">
-                      <span className="font-medium text-secondary-dark">{cat.name}</span>
+                      <span className="font-medium text-on-surface">{cat.name}</span>
                       <span className="font-bold text-on-surface">{cat.score}/{cat.maxScore}</span>
                     </div>
                     <div className="h-2.5 bg-surface-container rounded-full overflow-hidden">
@@ -72,8 +72,8 @@ export default function AIAnalysisPage() {
           </div>
 
           {/* Suggestions */}
-          <div className="bg-white rounded-lg border border-outline-variant/30 p-6">
-            <h2 className="text-lg font-bold text-secondary-dark mb-5">Improvement Suggestions</h2>
+          <div className="bg-surface-container-lowest rounded-lg border border-outline-variant p-6">
+            <h2 className="text-lg font-bold text-on-surface mb-5">Improvement Suggestions</h2>
             <div className="space-y-3">
               {analysisResults.suggestions.map((sug, i) => {
                 const Icon = suggestionIcons[sug.type]
@@ -92,8 +92,8 @@ export default function AIAnalysisPage() {
         {/* Right column */}
         <div className="space-y-6">
           {/* Matched keywords */}
-          <div className="bg-white rounded-lg border border-outline-variant/30 p-5">
-            <h3 className="text-sm font-bold text-secondary-dark mb-4 flex items-center gap-2">
+          <div className="bg-surface-container-lowest rounded-lg border border-outline-variant p-5">
+            <h3 className="text-sm font-bold text-on-surface mb-4 flex items-center gap-2">
               <CheckCircle size={16} className="text-green-500" />
               Matched Keywords
             </h3>
@@ -107,8 +107,8 @@ export default function AIAnalysisPage() {
           </div>
 
           {/* Missing keywords */}
-          <div className="bg-white rounded-lg border border-outline-variant/30 p-5">
-            <h3 className="text-sm font-bold text-secondary-dark mb-4 flex items-center gap-2">
+          <div className="bg-surface-container-lowest rounded-lg border border-outline-variant p-5">
+            <h3 className="text-sm font-bold text-on-surface mb-4 flex items-center gap-2">
               <XCircle size={16} className="text-error" />
               Missing Keywords
             </h3>

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Set;
 import java.util.UUID;
@@ -34,8 +35,8 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     public static class RefreshTokenInfo implements Serializable {
         private String token;
         private UUID userId;
-        private Instant createdAt;
-        private Instant expiresAt;
+        private LocalDateTime createdAt;
+        private LocalDateTime expiresAt;
     }
 
     private String buildRedisKey(UUID userId, String tokenId) {
@@ -51,8 +52,8 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         String tokenId = UUID.randomUUID().toString();
         String publicToken = encodeToken(userId, tokenId);
 
-        Instant now = Instant.now();
-        Instant expiresAt = now.plusMillis(jwtProperties.getRefreshTokenExpiration());
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(jwtProperties.getRefreshTokenExpiration());
 
         RefreshTokenInfo tokenInfo = RefreshTokenInfo.builder()
                 .token(publicToken)

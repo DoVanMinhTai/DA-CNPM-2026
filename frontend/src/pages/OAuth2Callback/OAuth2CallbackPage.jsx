@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 export default function OAuth2CallbackPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { initAuth, setAuthUser } = useAuth();
+  const { setAuthUser, isAuthenticated, isLoading } = useAuth();
 
   // States
   const [status, setStatus] = useState('loading'); // 'loading' | 'linking' | 'error'
@@ -16,24 +16,31 @@ export default function OAuth2CallbackPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
 
+  // Xử lý thành công (đợi AuthProvider tự động gọi initAuth)
+  useEffect(() => {
+    if (searchParams.get('success') === 'true') {
+      setStatus('loading');
+      if (!isLoading) {
+        if (isAuthenticated) {
+          toast.success('Đăng nhập thành công!');
+          navigate('/dashboard', { replace: true });
+        } else {
+          toast.error('Có lỗi xảy ra khi khôi phục phiên đăng nhập');
+          navigate('/login', { replace: true });
+        }
+      }
+    }
+  }, [searchParams, isLoading, isAuthenticated, navigate]);
+
+  // Xử lý linking, error hoặc fallback
   useEffect(() => {
     const success = searchParams.get('success');
+    if (success === 'true') return;
+
     const linking = searchParams.get('linking');
     const error = searchParams.get('error');
 
-    if (success === 'true') {
-      setStatus('loading');
-      // Đăng nhập thành công, gọi initAuth để đồng bộ access token in-memory và thông tin user
-      initAuth()
-        .then(() => {
-          toast.success('Đăng nhập thành công!');
-          navigate('/dashboard', { replace: true });
-        })
-        .catch(() => {
-          toast.error('Có lỗi xảy ra khi khôi phục phiên đăng nhập');
-          navigate('/login', { replace: true });
-        });
-    } else if (linking === 'true') {
+    if (linking === 'true') {
       setStatus('linking');
       setLinkingData({
         provider: searchParams.get('provider'),
@@ -50,7 +57,7 @@ export default function OAuth2CallbackPage() {
       // Mặc định chuyển về login nếu không có params hợp lệ
       navigate('/login', { replace: true });
     }
-  }, [searchParams, navigate, initAuth]);
+  }, [searchParams, navigate]);
 
   const handleConfirmLink = async (e) => {
     e.preventDefault();
@@ -93,10 +100,10 @@ export default function OAuth2CallbackPage() {
 
   if (status === 'loading') {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950 text-slate-200">
+      <div className="flex flex-col items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin rounded-full h-14 w-14 border-4 border-indigo-500 border-t-transparent" />
-          <p className="text-slate-400 font-medium text-base animate-pulse">Đang đồng bộ đăng nhập...</p>
+          <p className="text-primary-dark font-medium text-base animate-pulse">Đang đồng bộ đăng nhập...</p>
         </div>
       </div>
     );
@@ -115,7 +122,7 @@ export default function OAuth2CallbackPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
               </svg>
             </div>
-            
+
             <h2 className="text-2xl font-bold text-white mb-2">Liên kết tài khoản</h2>
             <p className="text-slate-400 text-sm mb-6">
               Địa chỉ email <span className="text-indigo-400 font-semibold">{linkingData.email}</span> đã được đăng ký trước đó trên CareerAI.
@@ -139,7 +146,7 @@ export default function OAuth2CallbackPage() {
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Nhập mật khẩu hiện tại của bạn để xác nhận liên kết:
               </label>
-              
+
               <div className="relative mb-4">
                 <input
                   type="password"

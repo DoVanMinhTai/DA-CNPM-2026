@@ -36,7 +36,7 @@ export default function CVDetailPage() {
             <ArrowLeft size={20} className="text-on-surface-variant" />
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-secondary-dark">Software Engineer 2024</h1>
+            <h1 className="text-xl font-bold text-on-surface">Software Engineer 2024</h1>
             <p className="text-sm text-outline">Last updated 2 days ago</p>
           </div>
         </div>
@@ -63,9 +63,9 @@ export default function CVDetailPage() {
       <div className="grid lg:grid-cols-3 gap-6">
         {/* CV Preview */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg border border-outline-variant/30 shadow-sm p-8 md:p-10">
+          <div className="bg-surface-container-lowest rounded-lg border border-outline-variant shadow-sm p-8 md:p-10">
             <div className="text-center mb-8 pb-6 border-b border-surface-container">
-              <h2 className="text-2xl font-bold text-secondary-dark">{sampleCV.personalInfo.fullName}</h2>
+              <h2 className="text-2xl font-bold text-on-surface">{sampleCV.personalInfo.fullName}</h2>
               <p className="text-sm text-on-surface-variant mt-2">
                 {sampleCV.personalInfo.email} · {sampleCV.personalInfo.phone} · {sampleCV.personalInfo.location}
               </p>
@@ -81,7 +81,7 @@ export default function CVDetailPage() {
               {sampleCV.experience.map((exp, i) => (
                 <div key={i} className="mb-4">
                   <div className="flex items-baseline justify-between">
-                    <h4 className="text-sm font-bold text-secondary-dark">{exp.role}</h4>
+                    <h4 className="text-sm font-bold text-on-surface">{exp.role}</h4>
                     <span className="text-xs text-outline">{exp.period}</span>
                   </div>
                   <p className="text-xs text-on-surface-variant mb-2">{exp.company}</p>
@@ -102,7 +102,7 @@ export default function CVDetailPage() {
               {sampleCV.education.map((edu, i) => (
                 <div key={i} className="flex items-baseline justify-between mb-2">
                   <div>
-                    <p className="text-sm font-semibold text-secondary-dark">{edu.degree}</p>
+                    <p className="text-sm font-semibold text-on-surface">{edu.degree}</p>
                     <p className="text-xs text-on-surface-variant">{edu.school}</p>
                   </div>
                   <span className="text-xs text-outline">{edu.year}</span>
@@ -114,7 +114,7 @@ export default function CVDetailPage() {
               <h3 className="text-xs font-bold uppercase tracking-wider text-primary mb-3 border-b border-primary/20 pb-1">Skills</h3>
               <div className="flex flex-wrap gap-2">
                 {sampleCV.skills.map((s) => (
-                  <span key={s} className="px-3 py-1 bg-surface-container text-xs text-secondary-dark rounded-full font-medium">{s}</span>
+                  <span key={s} className="px-3 py-1 bg-surface-container text-xs text-on-surface rounded-full font-medium">{s}</span>
                 ))}
               </div>
             </div>
@@ -124,8 +124,8 @@ export default function CVDetailPage() {
         {/* Analysis sidebar */}
         <div className="space-y-5">
           {/* Overall score */}
-          <div className="bg-white rounded-lg border border-outline-variant/30 p-5">
-            <h3 className="text-sm font-bold text-secondary-dark mb-4 flex items-center gap-2">
+          <div className="bg-surface-container-lowest rounded-lg border border-outline-variant p-5">
+            <h3 className="text-sm font-bold text-on-surface mb-4 flex items-center gap-2">
               <Sparkles size={16} className="text-primary" />
               AI Analysis
             </h3>
@@ -136,14 +136,14 @@ export default function CVDetailPage() {
           </div>
 
           {/* Category scores */}
-          <div className="bg-white rounded-lg border border-outline-variant/30 p-5">
-            <h3 className="text-sm font-bold text-secondary-dark mb-4">Score Breakdown</h3>
+          <div className="bg-surface-container-lowest rounded-lg border border-outline-variant p-5">
+            <h3 className="text-sm font-bold text-on-surface mb-4">Score Breakdown</h3>
             <div className="space-y-3">
               {analysisResults.categories.map((cat) => (
                 <div key={cat.name}>
                   <div className="flex items-center justify-between text-xs mb-1">
                     <span className="text-on-surface-variant">{cat.name}</span>
-                    <span className="font-bold text-secondary-dark">{cat.score}%</span>
+                    <span className="font-bold text-on-surface">{cat.score}%</span>
                   </div>
                   <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
                     <div className="h-full bg-primary rounded-full transition-all duration-1000 ease-out" style={{ width: `${cat.score}%` }} />
