@@ -60,10 +60,30 @@ jwt:
   refresh-token-expiration: 604800000  # 7 days (ms)
   email-verification-expiration: 86400000  # 24 hours (ms)
 
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
 # App Config
 app:
   frontend-url: http://localhost:5173
   backend-url: http://localhost:8080
+
+# Storage Config for Cloudflare R2 (S3 compatible)
+storage:
+  s3:
+    access-key: ${R2_ACCESS_KEY}
+    secret-key: ${R2_SECRET_KEY}
+    endpoint: ${R2_ENDPOINT}
+    bucket-name: ${R2_BUCKET_NAME}
+    region: auto
+
+# AI Config for Gemini
+ai:
+  gemini:
+    api-key: ${GEMINI_API_KEY}
+    model-name: gemini-1.5-flash
 
 # Swagger
 springdoc:

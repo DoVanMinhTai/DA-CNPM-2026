@@ -50,6 +50,16 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.CONFLICT, "Account Linking Required", ex.getMessage(), null);
     }
 
+    @ExceptionHandler(InsufficientCreditsException.class)
+    public ResponseEntity<ApiErrorResponse> handleInsufficientCreditsException(InsufficientCreditsException ex) {
+        return buildErrorResponse(HttpStatus.PAYMENT_REQUIRED, "Insufficient Credits", ex.getMessage(), null);
+    }
+
+    @ExceptionHandler(CvUploadException.class)
+    public ResponseEntity<ApiErrorResponse> handleCvUploadException(CvUploadException ex) {
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "CV Upload Error", ex.getMessage(), null);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
