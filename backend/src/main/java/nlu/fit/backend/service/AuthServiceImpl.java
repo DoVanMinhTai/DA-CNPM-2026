@@ -39,6 +39,7 @@ public class AuthServiceImpl implements AuthService {
     private final RefreshTokenService refreshTokenService;
     private final EmailService emailService;
     private final UserMapper userMapper;
+    private final SubscriptionService subscriptionService;
 
     @Override
     @Transactional
@@ -56,11 +57,14 @@ public class AuthServiceImpl implements AuthService {
                 .enabled(true)
                 .build();
 
-        userRepository.save(user);
-        log.info("Registered user successfully: {}", user.getEmail());
+        User savedUser = userRepository.save(user);
+        log.info("Registered user successfully: {}", savedUser.getEmail());
+
+        // Initialize user subscription
+        subscriptionService.initSubscription(savedUser);
 
         // Dispatch verification email
-        emailService.sendVerificationEmail(user.getEmail(), user.getFullName());
+        emailService.sendVerificationEmail(savedUser.getEmail(), savedUser.getFullName());
 
         return MessageResponse.builder()
                 .message("Registration successful. Please check your email to verify your account.")

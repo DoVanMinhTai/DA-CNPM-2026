@@ -8,6 +8,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nlu.fit.backend.dto.response.CvContentDto;
+import nlu.fit.backend.exception.AiProcessingException;
 import nlu.fit.backend.exception.CvUploadException;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ public class CvParserAiService {
     private final ChatLanguageModel chatLanguageModel;
     private CvParser cvParser;
 
+//  Provide a job description?
     interface CvParser {
         @UserMessage("Bạn là một chuyên gia tuyển dụng cấp cao và chuyên gia ATS. Hãy phân tích đoạn văn bản thô (raw text) được trích xuất từ CV của ứng viên dưới đây và chuyển đổi thành định dạng JSON có cấu trúc chính xác khớp hoàn toàn với cấu trúc mong muốn.\n\n" +
                 "Yêu cầu:\n" +
@@ -59,9 +61,14 @@ public class CvParserAiService {
                     parsedDto.getPersonalInfo() != null ? parsedDto.getPersonalInfo().getFullName() : "N/A");
             
             return parsedDto;
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("LangChain4j / Gemini processing failed", e);
-            throw new CvUploadException("Google Gemini was unable to structure the resume: " + e.getMessage(), e);
+
+            if (e.getMessage() != null && e.getMessage().contains("503")) {
+                throw new AiProcessingException("Hệ thống AI của Google hiện đang quá tải. Vui lòng bấm thử lại sau ít giây!");
+            }
+
+            throw new AiProcessingException("Không thể bóc tách dữ liệu CV do lỗi dịch vụ AI: " + e.getMessage());
         }
     }
 }

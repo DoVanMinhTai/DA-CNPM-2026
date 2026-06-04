@@ -20,4 +20,26 @@ export const cvApi = {
 
     return data;
   },
+
+  /**
+   * Fetches or triggers AI CV Analysis for a specific CV.
+   * 
+   * @param {string} cvId - The UUID of the CV
+   * @returns {Promise<Object>} CvAnalysisResponse
+   */
+  getCvAnalysis: async (cvId) => {
+    const { data } = await axiosInstance.get(`/api/cv-analysis/${cvId}`);
+    return data;
+  },
+
+  /**
+   * Fetches the parsed CV details by ID from database.
+   * 
+   * @param {string} id - The UUID of the CV
+   * @returns {Promise<Object>} CvUploadResponse { cvId, title, content, originalFileUrl }
+   */
+  getCvById: async (id) => {
+    const { data } = await axiosInstance.get(`/api/cv/${id}`);
+    return data;
+  },
 };

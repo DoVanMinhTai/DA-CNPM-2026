@@ -39,6 +39,7 @@ public class CvUploadService {
     private final S3StorageService s3StorageService;
     private final TextExtractionService textExtractionService;
     private final CvParserAiService cvParserAiService;
+    private final SubscriptionService subscriptionService;
     
     private final ObjectMapper objectMapper;
 
@@ -58,15 +59,10 @@ public class CvUploadService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
 
-        // 2. Check credit balance
+        // 2. Check credit balance (Not strictly needed here as validateAndConsumeCredit handles validation, but good for logging)
         Integer creditBalance = subscriptionRepository.findCreditBalanceByUserId(userId)
                 .orElse(0);
         log.info("User {} current credit balance: {}", userId, creditBalance);
-        
-        if (creditBalance < 1) {
-            log.warn("User {} has insufficient credits (balance: {})", userId, creditBalance);
-            throw new InsufficientCreditsException("Số dư credit của bạn không đủ để thực hiện chức năng AI này. Vui lòng nạp thêm credit.");
-        }
 
         // 3. Upload physical file to Cloudflare R2
         String fileUrl = s3StorageService.uploadOriginalCv(userId, file);
@@ -76,6 +72,9 @@ public class CvUploadService {
 
         // 5. Send to Google Gemini for structured parsing
         CvContentDto cvContentDto = cvParserAiService.parseResume(rawText);
+
+        // 5.5 Deduct 1 credit for using the AI feature
+        subscriptionService.validateAndConsumeCredit(userId, 1);
 
         // 6. Serialize parsed content to String JSONB format
         String jsonString;
@@ -108,7 +107,7 @@ public class CvUploadService {
         Cv savedCv = cvRepository.save(cvEntity);
         log.info("CV record saved with ID: {}", savedCv.getId());
 
-        // 8. Log AI Usage (PostgreSQL trigger will handle credit deduction)
+        // 8. Log AI Usage
         AiUsageLog usageLog = AiUsageLog.builder()
                 .user(user)
                 .cv(savedCv)
@@ -116,15 +115,15 @@ public class CvUploadService {
                 .creditsUsed((short) 1)
                 .build();
         aiUsageLogRepository.save(usageLog);
-        log.info("AI Usage Log saved. Trigger executed to deduct credit.");
+        log.info("AI Usage Log saved.");
 
-        // Force flush Jpa to execute PostgreSQL trigger immediately in this transaction
+        // Force flush Jpa
         cvRepository.flush();
         aiUsageLogRepository.flush();
 
-        // 9. Query updated credit balance after trigger execution
+        // 9. Query updated credit balance
         Integer updatedCredits = subscriptionRepository.findCreditBalanceByUserId(userId)
-                .orElse(creditBalance - 1); // fallback in case trigger didn't update synchronously or table lacks trigger
+                .orElse(creditBalance - 1);
         log.info("Credit balance updated. Remaining: {}", updatedCredits);
 
         return CvUploadResponse.builder()
@@ -133,6 +132,32 @@ public class CvUploadService {
                 .content(cvContentDto)
                 .originalFileUrl(fileUrl)
                 .remainingCredits(updatedCredits)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public CvUploadResponse getCvById(UUID userId, UUID cvId) {
+        log.info("Fetching CV {} for user {}", cvId, userId);
+        Cv cv = cvRepository.findById(cvId)
+                .orElseThrow(() -> new CvUploadException("Không tìm thấy CV với ID: " + cvId, null));
+
+        if (!cv.getUser().getId().equals(userId)) {
+            throw new CvUploadException("Bạn không có quyền truy cập CV này.", null);
+        }
+
+        CvContentDto cvContentDto = null;
+        try {
+            cvContentDto = objectMapper.readValue(cv.getContent(), CvContentDto.class);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to deserialize CV JSON content", e);
+            throw new CvUploadException("Định dạng dữ liệu CV không hợp lệ: " + e.getMessage(), e);
+        }
+
+        return CvUploadResponse.builder()
+                .cvId(cv.getId())
+                .title(cv.getTitle())
+                .content(cvContentDto)
+                .originalFileUrl(cv.getOriginalFileUrl())
                 .build();
     }
 }

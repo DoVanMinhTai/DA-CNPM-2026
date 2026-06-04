@@ -27,7 +27,7 @@ public class Subscription {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private PlanType plan = PlanType.FREE;
+    private PlanType plan = PlanType.STARTER;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)

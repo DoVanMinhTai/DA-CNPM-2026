@@ -3,6 +3,8 @@ package nlu.fit.backend.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import nlu.fit.backend.entity.enums.CvStatus;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -38,6 +40,7 @@ public class Cv {
     private String originalFileUrl;
 
     // Lưu ý: Hibernate 6 tự động map String sang JSONB trên PostgreSQL
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false, columnDefinition = "jsonb")
     private String content = "{}";
 

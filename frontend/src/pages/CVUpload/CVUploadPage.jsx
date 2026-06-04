@@ -64,13 +64,14 @@ export default function CVUploadPage() {
       setUploadStage('completed')
       toast.success('Bóc tách và phân tích CV thành công!')
       
-      // Redirect to editor passing CV content and ID
+      // Redirect to CV Editor passing parsed content
       setTimeout(() => {
         navigate(`/cv/editor/${response.cvId}`, { 
           state: { 
             cvData: response.content,
             cvId: response.cvId,
-            originalFileUrl: response.originalFileUrl
+            originalFileUrl: response.originalFileUrl,
+            cvName: file.name
           } 
         })
       }, 1000)

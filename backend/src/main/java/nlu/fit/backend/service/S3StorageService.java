@@ -27,16 +27,16 @@ public class S3StorageService {
         if (originalFilename == null) {
             originalFilename = "resume";
         }
-        
+
         // Key format: cvs/{userId}/{uuid}_{originalFilename}
-        String key = String.format("cvs/%s/%s_%s", 
-                userId.toString(), 
-                UUID.randomUUID().toString().substring(0, 8), 
+        String key = String.format("cvs/%s/%s_%s",
+                userId.toString(),
+                UUID.randomUUID().toString().substring(0, 8),
                 originalFilename
         );
 
         try {
-            log.info("Uploading file {} to Cloudflare R2 bucket {} with key {}", 
+            log.info("Uploading file {} to Cloudflare R2 bucket {} with key {}",
                     originalFilename, properties.getBucketName(), key);
 
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
@@ -45,16 +45,18 @@ public class S3StorageService {
                     .contentType(file.getContentType())
                     .build();
 
-            s3Client.putObject(putObjectRequest, 
+            s3Client.putObject(putObjectRequest,
                     RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
 
-            // Construct S3 Path-style URL as a fallback, e.g. endpoint/bucket/key
-            String fileUrl = String.format("%s/%s/%s", 
-                    properties.getEndpoint(), 
-                    properties.getBucketName(), 
+            String publicDomain = "yhohvphkszvivyjefryr.supabase.co"; // Bạn có thể chuyển chuỗi này vào file properties nếu muốn
+
+            String fileUrl = String.format("https://%s/storage/v1/object/public/%s/%s",
+                    publicDomain,
+                    properties.getBucketName(),
                     key
             );
-            
+            // ================================================================
+
             log.info("Uploaded successfully. Public URL: {}", fileUrl);
             return fileUrl;
         } catch (IOException e) {
@@ -65,4 +67,5 @@ public class S3StorageService {
             throw new CvUploadException("Storage service error: " + e.getMessage(), e);
         }
     }
+
 }

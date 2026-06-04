@@ -13,6 +13,8 @@ import ChangePasswordPage from './pages/ChangePassword/ChangePasswordPage'
 import DashboardLayout from './layouts/DashboardLayout'
 import { ProtectedRoute } from './auth/ProtectedRoute'
 import OAuth2CallbackPage from './pages/OAuth2Callback/OAuth2CallbackPage'
+import CVUploadPage from './pages/CVUpload/CVUploadPage'
+import VnPayCallback from './pages/Billing/VnPayCallback'
 
 function App() {
   return (
@@ -23,6 +25,7 @@ function App() {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/oauth2/callback" element={<OAuth2CallbackPage />} />
+      <Route path="/payment/result" element={<VnPayCallback />} />
 
       {/* Protected routes */}
       <Route element={<ProtectedRoute />}>
@@ -30,6 +33,7 @@ function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/cv/editor" element={<CVEditorPage />} />
           <Route path="/cv/editor/:id" element={<CVEditorPage />} />
+          <Route path="/cv/upload" element={<CVUploadPage />} />
           <Route path="/cv/:id" element={<CVDetailPage />} />
           <Route path="/ai-analysis" element={<AIAnalysisPage />} />
           <Route path="/billing" element={<BillingPage />} />
