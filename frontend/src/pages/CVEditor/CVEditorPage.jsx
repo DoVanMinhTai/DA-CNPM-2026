@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { useLocation, useParams } from 'react-router-dom'
 import {
   Save, Download, ChevronDown, Plus, Trash2, Undo2, Redo2,
   MousePointer2, Hand, Type, PenLine, Highlighter, Shapes, Image, PenTool,
@@ -6,6 +7,7 @@ import {
   Bold, Italic, Upload, X
 } from 'lucide-react'
 import { sampleCV } from '../../data/mockData'
+import { cvApi } from '../../api/cvApi'
 
 const tools = [
   { icon: MousePointer2, label: 'Select', id: 'select' },
@@ -28,6 +30,53 @@ const colorSwatches = [
 ]
 
 export default function CVEditorPage() {
+  const location = useLocation()
+  const { id } = useParams()
+  const { cvData: stateCvData, cvId: stateCvId, originalFileUrl: stateOriginalFileUrl, cvName: stateCvName } = location.state || {}
+
+  const getInitials = (name) => {
+    if (!name) return 'CV'
+    const parts = name.trim().split(/\s+/)
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase()
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+  }
+
+  const [cvData, setCvData] = useState(stateCvData || sampleCV)
+  const [cvNameState, setCvNameState] = useState(stateCvName || '')
+  const [originalFileUrlState, setOriginalFileUrlState] = useState(stateOriginalFileUrl || '')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  console.log(originalFileUrlState)
+  useEffect(() => {
+    const fetchCv = async () => {
+      if (!id) return
+
+      // If we came from navigation state and it matches, use that to prevent double fetch
+      if (stateCvId === id && stateCvData) {
+        return
+      }
+
+      try {
+        setLoading(true)
+        setError(null)
+        const data = await cvApi.getCvById(id)
+        if (data && data.content) {
+          setCvData(data.content)
+          setCvNameState(data.title)
+          setOriginalFileUrlState(data.originalFileUrl)
+        }
+      } catch (err) {
+        console.error('Failed to fetch CV details:', err)
+        setError('Không thể tải dữ liệu CV thực tế từ hệ thống.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCv()
+  }, [id, stateCvId, stateCvData])
+
   const [activeTool, setActiveTool] = useState('select')
   const [zoom, setZoom] = useState(100)
   const [selectedElement, setSelectedElement] = useState('summary')
@@ -56,11 +105,26 @@ export default function CVEditorPage() {
           </div>
           <div>
             <h1 className="text-sm font-bold text-primary leading-none">
-              Senior_Product_Designer_CV.pdf
+              {cvNameState || cvName || 'Senior_Product_Designer_CV.pdf'}
             </h1>
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant/70 mt-0.5">
-              Saved 2 minutes ago
-            </p>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant/70">
+                Saved 2 minutes ago
+              </p>
+              {(originalFileUrlState || originalFileUrl) && (
+                <>
+                  <span className="text-on-surface-variant/50 text-[10px]">•</span>
+                  <a
+                    href={originalFileUrlState || originalFileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[10px] text-primary hover:underline font-bold"
+                  >
+                    <Download size={10} /> View Original CV
+                  </a>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -136,11 +200,10 @@ export default function CVEditorPage() {
                   setActiveTool(tool.id)
                   if (tool.id === 'image') setShowUploadModal(true)
                 }}
-                className={`p-2 rounded-xl transition-all ${
-                  activeTool === tool.id
-                    ? 'text-white bg-primary shadow-sm'
-                    : 'text-on-surface-variant hover:bg-surface-container-high'
-                }`}
+                className={`p-2 rounded-xl transition-all ${activeTool === tool.id
+                  ? 'text-white bg-primary shadow-sm'
+                  : 'text-on-surface-variant hover:bg-surface-container-high'
+                  }`}
                 title={tool.label}
               >
                 <tool.icon size={18} />
@@ -223,168 +286,286 @@ export default function CVEditorPage() {
               padding: `${48 * (zoom / 100)}px`,
             }}
           >
-            {/* CV Header */}
-            <div className="flex justify-between items-start">
-              <div className="space-y-1">
-                <h2
-                  className="text-primary font-bold"
-                  style={{ fontSize: `${Math.max(24, 32 * (zoom / 100))}px`, lineHeight: 1.2 }}
-                >
-                  {sampleCV.personalInfo.fullName}
-                </h2>
-                <p
-                  className="text-secondary font-semibold"
-                  style={{ fontSize: `${Math.max(12, 16 * (zoom / 100))}px` }}
-                >
-                  Senior Product Designer
-                </p>
+            {loading ? (
+              <div className="flex-1 flex flex-col items-center justify-center gap-3">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <p className="text-xs text-outline font-semibold">Loading parsed CV content...</p>
               </div>
-              <div
-                className="bg-primary rounded-full flex items-center justify-center text-white font-bold overflow-hidden flex-shrink-0"
-                style={{
-                  width: `${80 * (zoom / 100)}px`,
-                  height: `${80 * (zoom / 100)}px`,
-                  fontSize: `${Math.max(16, 28 * (zoom / 100))}px`,
-                }}
-              >
-                AT
+            ) : error ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-4 gap-2">
+                <p className="text-sm font-bold text-error">{error}</p>
+                <p className="text-xs text-outline">Falling back to standard sample CV template.</p>
               </div>
-            </div>
-
-            {/* Selected Element (Summary) - with dashed selection border */}
-            <div
-              className={`relative p-2 cursor-move group transition-all ${
-                selectedElement === 'summary'
-                  ? 'border-2 border-dashed border-primary'
-                  : 'border-2 border-transparent hover:border-outline-variant/40 hover:border-dashed'
-              }`}
-              onClick={() => setSelectedElement('summary')}
-            >
-              <p
-                className="text-on-surface-variant leading-relaxed"
-                style={{ fontSize: `${Math.max(10, 14 * (zoom / 100))}px` }}
-              >
-                {sampleCV.summary}
-              </p>
-              {/* Selection handles */}
-              {selectedElement === 'summary' && (
-                <>
-                  <span className="absolute -top-1 -left-1 w-2 h-2 bg-primary border border-white" />
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary border border-white" />
-                  <span className="absolute -bottom-1 -left-1 w-2 h-2 bg-primary border border-white" />
-                  <span className="absolute -bottom-1 -right-1 w-2 h-2 bg-primary border border-white" />
-                </>
-              )}
-            </div>
-
-            {/* Experience Section */}
-            <div
-              className={`space-y-3 p-2 cursor-pointer transition-all ${
-                selectedElement === 'experience'
-                  ? 'border-2 border-dashed border-primary'
-                  : 'border-2 border-transparent hover:border-outline-variant/40 hover:border-dashed'
-              }`}
-              onClick={() => setSelectedElement('experience')}
-            >
-              <h3
-                className="border-b-2 border-primary-dim text-primary font-bold uppercase tracking-widest pb-1"
-                style={{ fontSize: `${Math.max(9, 12 * (zoom / 100))}px` }}
-              >
-                Experience
-              </h3>
-              {sampleCV.experience.map((exp, i) => (
-                <div key={i} className="space-y-1">
-                  <div className="flex justify-between items-baseline">
-                    <span className="font-bold" style={{ fontSize: `${Math.max(10, 14 * (zoom / 100))}px` }}>
-                      {exp.role} @ {exp.company}
-                    </span>
-                    <span className="text-on-surface-variant/60" style={{ fontSize: `${Math.max(9, 12 * (zoom / 100))}px` }}>
-                      {exp.period}
-                    </span>
+            ) : (
+              <>
+                {/* CV Header */}
+                <div className="flex justify-between items-start">
+                  <div className="space-y-1">
+                    <h2
+                      className="text-primary font-bold"
+                      style={{ fontSize: `${Math.max(24, 32 * (zoom / 100))}px`, lineHeight: 1.2 }}
+                    >
+                      {cvData.personalInfo?.fullName}
+                    </h2>
+                    <div
+                      className="flex flex-wrap gap-x-2 gap-y-1 text-on-surface-variant font-medium mt-1.5"
+                      style={{ fontSize: `${Math.max(8, 11 * (zoom / 100))}px` }}
+                    >
+                      {cvData.personalInfo?.email && (
+                        <span>{cvData.personalInfo.email}</span>
+                      )}
+                      {cvData.personalInfo?.email && (cvData.personalInfo?.phone || cvData.personalInfo?.location || cvData.personalInfo?.linkedin) && (
+                        <span className="text-outline-variant">•</span>
+                      )}
+                      {cvData.personalInfo?.phone && (
+                        <span>{cvData.personalInfo.phone}</span>
+                      )}
+                      {cvData.personalInfo?.phone && (cvData.personalInfo?.location || cvData.personalInfo?.linkedin) && (
+                        <span className="text-outline-variant">•</span>
+                      )}
+                      {cvData.personalInfo?.location && (
+                        <span>{cvData.personalInfo.location}</span>
+                      )}
+                      {cvData.personalInfo?.location && cvData.personalInfo?.linkedin && (
+                        <span className="text-outline-variant">•</span>
+                      )}
+                      {cvData.personalInfo?.linkedin && (
+                        <span className="truncate max-w-[150px]">{cvData.personalInfo.linkedin}</span>
+                      )}
+                    </div>
                   </div>
-                  <ul className="space-y-0.5">
-                    {exp.bullets.map((b, j) => (
-                      <li
-                        key={j}
-                        className="text-on-surface-variant flex items-start gap-1.5"
-                        style={{ fontSize: `${Math.max(9, 12 * (zoom / 100))}px` }}
-                      >
-                        <span className="w-1 h-1 rounded-full bg-outline mt-1.5 flex-shrink-0" />
-                        {b}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-              {selectedElement === 'experience' && (
-                <>
-                  <span className="absolute -top-1 -left-1 w-2 h-2 bg-primary border border-white" />
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary border border-white" />
-                  <span className="absolute -bottom-1 -left-1 w-2 h-2 bg-primary border border-white" />
-                  <span className="absolute -bottom-1 -right-1 w-2 h-2 bg-primary border border-white" />
-                </>
-              )}
-            </div>
-
-            {/* Education Section */}
-            <div
-              className={`space-y-2 p-2 cursor-pointer transition-all ${
-                selectedElement === 'education'
-                  ? 'border-2 border-dashed border-primary'
-                  : 'border-2 border-transparent hover:border-outline-variant/40 hover:border-dashed'
-              }`}
-              onClick={() => setSelectedElement('education')}
-            >
-              <h3
-                className="border-b-2 border-primary-dim text-primary font-bold uppercase tracking-widest pb-1"
-                style={{ fontSize: `${Math.max(9, 12 * (zoom / 100))}px` }}
-              >
-                Education
-              </h3>
-              {sampleCV.education.map((edu, i) => (
-                <div key={i} className="flex justify-between items-baseline">
-                  <div>
-                    <span className="font-bold" style={{ fontSize: `${Math.max(10, 13 * (zoom / 100))}px` }}>
-                      {edu.degree}
-                    </span>
-                    <span className="text-on-surface-variant" style={{ fontSize: `${Math.max(9, 12 * (zoom / 100))}px` }}>
-                      {' '}— {edu.school}
-                    </span>
-                  </div>
-                  <span className="text-on-surface-variant/60" style={{ fontSize: `${Math.max(9, 11 * (zoom / 100))}px` }}>
-                    {edu.year}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Skills Section */}
-            <div
-              className={`p-2 cursor-pointer transition-all ${
-                selectedElement === 'skills'
-                  ? 'border-2 border-dashed border-primary'
-                  : 'border-2 border-transparent hover:border-outline-variant/40 hover:border-dashed'
-              }`}
-              onClick={() => setSelectedElement('skills')}
-            >
-              <h3
-                className="border-b-2 border-primary-dim text-primary font-bold uppercase tracking-widest pb-1 mb-2"
-                style={{ fontSize: `${Math.max(9, 12 * (zoom / 100))}px` }}
-              >
-                Skills
-              </h3>
-              <div className="flex flex-wrap gap-1.5">
-                {sampleCV.skills.map((skill) => (
-                  <span
-                    key={skill}
-                    className="px-2.5 py-0.5 bg-surface-container text-on-surface-variant rounded text-center"
-                    style={{ fontSize: `${Math.max(8, 11 * (zoom / 100))}px` }}
+                  <div
+                    className="bg-primary rounded-full flex items-center justify-center text-white font-bold overflow-hidden flex-shrink-0"
+                    style={{
+                      width: `${80 * (zoom / 100)}px`,
+                      height: `${80 * (zoom / 100)}px`,
+                      fontSize: `${Math.max(16, 28 * (zoom / 100))}px`,
+                    }}
                   >
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
+                    {getInitials(cvData.personalInfo?.fullName)}
+                  </div>
+                </div>
+
+                {/* Selected Element (Summary) - with dashed selection border */}
+                {cvData.summary && (
+                  <div
+                    className={`relative p-2 cursor-move group transition-all ${selectedElement === 'summary'
+                      ? 'border-2 border-dashed border-primary'
+                      : 'border-2 border-transparent hover:border-outline-variant/40 hover:border-dashed'
+                      }`}
+                    onClick={() => setSelectedElement('summary')}
+                  >
+                    <p
+                      className="text-on-surface-variant leading-relaxed"
+                      style={{ fontSize: `${Math.max(10, 14 * (zoom / 100))}px` }}
+                    >
+                      {cvData.summary}
+                    </p>
+                    {/* Selection handles */}
+                    {selectedElement === 'summary' && (
+                      <>
+                        <span className="absolute -top-1 -left-1 w-2 h-2 bg-primary border border-white" />
+                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary border border-white" />
+                        <span className="absolute -bottom-1 -left-1 w-2 h-2 bg-primary border border-white" />
+                        <span className="absolute -bottom-1 -right-1 w-2 h-2 bg-primary border border-white" />
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {/* Experience Section */}
+                {cvData.experience && cvData.experience.length > 0 && (
+                  <div
+                    className={`space-y-3 p-2 cursor-pointer transition-all ${selectedElement === 'experience'
+                      ? 'border-2 border-dashed border-primary'
+                      : 'border-2 border-transparent hover:border-outline-variant/40 hover:border-dashed'
+                      }`}
+                    onClick={() => setSelectedElement('experience')}
+                  >
+                    <h3
+                      className="border-b-2 border-primary-dim text-primary font-bold uppercase tracking-widest pb-1"
+                      style={{ fontSize: `${Math.max(9, 12 * (zoom / 100))}px` }}
+                    >
+                      Experience
+                    </h3>
+                    {(cvData.experience || []).map((exp, i) => (
+                      <div key={i} className="space-y-1">
+                        <div className="flex justify-between items-baseline">
+                          <span className="font-bold" style={{ fontSize: `${Math.max(10, 14 * (zoom / 100))}px` }}>
+                            {exp.role} @ {exp.company}
+                          </span>
+                          <span className="text-on-surface-variant/60" style={{ fontSize: `${Math.max(9, 12 * (zoom / 100))}px` }}>
+                            {exp.period}
+                          </span>
+                        </div>
+                        <ul className="space-y-0.5">
+                          {(exp.bullets || []).map((b, j) => (
+                            <li
+                              key={j}
+                              className="text-on-surface-variant flex items-start gap-1.5"
+                              style={{ fontSize: `${Math.max(9, 12 * (zoom / 100))}px` }}
+                            >
+                              <span className="w-1 h-1 rounded-full bg-outline mt-1.5 flex-shrink-0" />
+                              {b}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                    {selectedElement === 'experience' && (
+                      <>
+                        <span className="absolute -top-1 -left-1 w-2 h-2 bg-primary border border-white" />
+                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary border border-white" />
+                        <span className="absolute -bottom-1 -left-1 w-2 h-2 bg-primary border border-white" />
+                        <span className="absolute -bottom-1 -right-1 w-2 h-2 bg-primary border border-white" />
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {/* Education Section */}
+                {cvData.education && cvData.education.length > 0 && (
+                  <div
+                    className={`space-y-2 p-2 cursor-pointer transition-all ${selectedElement === 'education'
+                      ? 'border-2 border-dashed border-primary'
+                      : 'border-2 border-transparent hover:border-outline-variant/40 hover:border-dashed'
+                      }`}
+                    onClick={() => setSelectedElement('education')}
+                  >
+                    <h3
+                      className="border-b-2 border-primary-dim text-primary font-bold uppercase tracking-widest pb-1"
+                      style={{ fontSize: `${Math.max(9, 12 * (zoom / 100))}px` }}
+                    >
+                      Education
+                    </h3>
+                    {(cvData.education || []).map((edu, i) => (
+                      <div key={i} className="flex justify-between items-baseline">
+                        <div>
+                          <span className="font-bold" style={{ fontSize: `${Math.max(10, 13 * (zoom / 100))}px` }}>
+                            {edu.degree}
+                          </span>
+                          <span className="text-on-surface-variant" style={{ fontSize: `${Math.max(9, 12 * (zoom / 100))}px` }}>
+                            {' '}— {edu.school}
+                          </span>
+                        </div>
+                        <span className="text-on-surface-variant/60" style={{ fontSize: `${Math.max(9, 11 * (zoom / 100))}px` }}>
+                          {edu.year}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Skills Section */}
+                {cvData.skills && cvData.skills.length > 0 && (
+                  <div
+                    className={`p-2 cursor-pointer transition-all ${selectedElement === 'skills'
+                      ? 'border-2 border-dashed border-primary'
+                      : 'border-2 border-transparent hover:border-outline-variant/40 hover:border-dashed'
+                      }`}
+                    onClick={() => setSelectedElement('skills')}
+                  >
+                    <h3
+                      className="border-b-2 border-primary-dim text-primary font-bold uppercase tracking-widest pb-1 mb-2"
+                      style={{ fontSize: `${Math.max(9, 12 * (zoom / 100))}px` }}
+                    >
+                      Skills
+                    </h3>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(cvData.skills || []).map((skill) => (
+                        <span
+                          key={skill}
+                          className="px-2.5 py-0.5 bg-surface-container text-on-surface-variant rounded text-center"
+                          style={{ fontSize: `${Math.max(8, 11 * (zoom / 100))}px` }}
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Projects Section */}
+                {cvData.projects && cvData.projects.length > 0 && (
+                  <div
+                    className={`space-y-2 p-2 cursor-pointer transition-all ${selectedElement === 'projects'
+                      ? 'border-2 border-dashed border-primary'
+                      : 'border-2 border-transparent hover:border-outline-variant/40 hover:border-dashed'
+                      }`}
+                    onClick={() => setSelectedElement('projects')}
+                  >
+                    <h3
+                      className="border-b-2 border-primary-dim text-primary font-bold uppercase tracking-widest pb-1"
+                      style={{ fontSize: `${Math.max(9, 12 * (zoom / 100))}px` }}
+                    >
+                      Projects
+                    </h3>
+                    {(cvData.projects || []).map((project, i) => (
+                      <div key={i} className="space-y-1">
+                        <div className="font-bold" style={{ fontSize: `${Math.max(10, 13 * (zoom / 100))}px` }}>
+                          {project.name}
+                        </div>
+                        {project.description && (
+                          <p className="text-on-surface-variant leading-relaxed" style={{ fontSize: `${Math.max(9, 12 * (zoom / 100))}px` }}>
+                            {project.description}
+                          </p>
+                        )}
+                        {project.technologies && project.technologies.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {project.technologies.map((tech) => (
+                              <span
+                                key={tech}
+                                className="px-2 py-0.5 bg-primary/5 text-primary border border-primary/20 rounded-md text-center"
+                                style={{ fontSize: `${Math.max(7, 10 * (zoom / 100))}px` }}
+                              >
+                                {tech}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Certifications Section */}
+                {cvData.certifications && cvData.certifications.length > 0 && (
+                  <div
+                    className={`space-y-2 p-2 cursor-pointer transition-all ${selectedElement === 'certifications'
+                      ? 'border-2 border-dashed border-primary'
+                      : 'border-2 border-transparent hover:border-outline-variant/40 hover:border-dashed'
+                      }`}
+                    onClick={() => setSelectedElement('certifications')}
+                  >
+                    <h3
+                      className="border-b-2 border-primary-dim text-primary font-bold uppercase tracking-widest pb-1"
+                      style={{ fontSize: `${Math.max(9, 12 * (zoom / 100))}px` }}
+                    >
+                      Certifications
+                    </h3>
+                    {(cvData.certifications || []).map((cert, i) => (
+                      <div key={i} className="flex justify-between items-baseline">
+                        <div>
+                          <span className="font-bold" style={{ fontSize: `${Math.max(10, 13 * (zoom / 100))}px` }}>
+                            {cert.name}
+                          </span>
+                          {cert.issuer && (
+                            <span className="text-on-surface-variant" style={{ fontSize: `${Math.max(9, 12 * (zoom / 100))}px` }}>
+                              {' '}— {cert.issuer}
+                            </span>
+                          )}
+                        </div>
+                        {cert.year && (
+                          <span className="text-on-surface-variant/60" style={{ fontSize: `${Math.max(9, 11 * (zoom / 100))}px` }}>
+                            {cert.year}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </main>
 
@@ -428,17 +609,15 @@ export default function CVEditorPage() {
                 <div className="flex items-end gap-1">
                   <button
                     onClick={() => setIsBold(!isBold)}
-                    className={`w-9 h-9 flex items-center justify-center rounded-xl font-bold text-sm transition-all ${
-                      isBold ? 'bg-primary text-white' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
-                    }`}
+                    className={`w-9 h-9 flex items-center justify-center rounded-xl font-bold text-sm transition-all ${isBold ? 'bg-primary text-white' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+                      }`}
                   >
                     <Bold size={14} />
                   </button>
                   <button
                     onClick={() => setIsItalic(!isItalic)}
-                    className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all ${
-                      isItalic ? 'bg-primary text-white' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
-                    }`}
+                    className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all ${isItalic ? 'bg-primary text-white' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+                      }`}
                   >
                     <Italic size={14} />
                   </button>
@@ -455,11 +634,10 @@ export default function CVEditorPage() {
                   <button
                     key={value}
                     onClick={() => setTextAlign(value)}
-                    className={`p-2 transition-all ${
-                      textAlign === value
-                        ? 'border-b-2 border-primary text-primary'
-                        : 'text-on-surface-variant hover:text-primary'
-                    }`}
+                    className={`p-2 transition-all ${textAlign === value
+                      ? 'border-b-2 border-primary text-primary'
+                      : 'text-on-surface-variant hover:text-primary'
+                      }`}
                   >
                     <Icon size={18} />
                   </button>
@@ -476,11 +654,10 @@ export default function CVEditorPage() {
                     <button
                       key={swatch.color}
                       onClick={() => setActiveColor(swatch.color)}
-                      className={`w-6 h-6 rounded-full transition-all ${
-                        activeColor === swatch.color
-                          ? 'ring-2 ring-offset-2 ring-primary'
-                          : 'hover:scale-110'
-                      }`}
+                      className={`w-6 h-6 rounded-full transition-all ${activeColor === swatch.color
+                        ? 'ring-2 ring-offset-2 ring-primary'
+                        : 'hover:scale-110'
+                        }`}
                       style={{ backgroundColor: swatch.color }}
                       title={swatch.label}
                     />

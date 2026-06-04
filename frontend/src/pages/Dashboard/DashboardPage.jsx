@@ -54,13 +54,19 @@ export default function DashboardPage() {
       <div className="animate-fade-in delay-300">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-xl font-bold text-on-surface">Recent Documents</h2>
-          <Link
-            to="/cv/editor"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded hover:bg-primary-dark transition-all duration-200"
-          >
-            <Plus size={16} />
-            New CV
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link to="/cv/upload" className="inline-flex items-center gap-2 px-4 py-2 border border-outline-variant text-on-surface text-sm font-medium rounded hover:bg-surface-container-low transition-all duration-200">
+              <Upload size={16} />
+              Upload CV
+            </Link>
+            <Link
+              to="/cv/editor"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded hover:bg-primary-dark transition-all duration-200"
+            >
+              <Plus size={16} />
+              New CV
+            </Link>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -84,10 +90,9 @@ export default function DashboardPage() {
               <p className="text-xs text-outline mb-3">Updated {doc.updatedAt}</p>
               <div className="flex items-center justify-between">
                 <ScoreBadge score={doc.score} />
-                <span className={`text-xs font-medium capitalize ${
-                  doc.status === 'optimized' ? 'text-green-600' :
+                <span className={`text-xs font-medium capitalize ${doc.status === 'optimized' ? 'text-green-600' :
                   doc.status === 'needs-review' ? 'text-amber-600' : 'text-outline'
-                }`}>
+                  }`}>
                   {doc.status.replace('-', ' ')}
                 </span>
               </div>
