@@ -160,4 +160,43 @@ public class CvUploadService {
                 .originalFileUrl(cv.getOriginalFileUrl())
                 .build();
     }
+
+    @Transactional
+    public CvUploadResponse updateCv(UUID userId, UUID cvId, MultipartFile file, String contentJson) {
+        log.info("Updating CV {} for user {}", cvId, userId);
+        Cv cv = cvRepository.findById(cvId)
+                .orElseThrow(() -> new CvUploadException("Không tìm thấy CV với ID: " + cvId, null));
+
+        if (!cv.getUser().getId().equals(userId)) {
+            throw new CvUploadException("Bạn không có quyền cập nhật CV này.", null);
+        }
+
+        if (file != null && !file.isEmpty()) {
+            String fileUrl = s3StorageService.uploadOriginalCv(userId, file);
+            cv.setOriginalFileUrl(fileUrl);
+        }
+
+        if (contentJson != null && !contentJson.trim().isEmpty()) {
+            cv.setContent(contentJson);
+        }
+
+        Cv savedCv = cvRepository.save(cv);
+        cvRepository.flush();
+
+        CvContentDto cvContentDto = null;
+        try {
+            cvContentDto = objectMapper.readValue(savedCv.getContent(), CvContentDto.class);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to deserialize CV JSON content", e);
+            throw new CvUploadException("Định dạng dữ liệu CV không hợp lệ: " + e.getMessage(), e);
+        }
+
+        return CvUploadResponse.builder()
+                .cvId(savedCv.getId())
+                .title(savedCv.getTitle())
+                .content(cvContentDto)
+                .originalFileUrl(savedCv.getOriginalFileUrl())
+                .build();
+    }
 }
+

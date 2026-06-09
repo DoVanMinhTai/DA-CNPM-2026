@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.springframework.web.bind.annotation.PutMapping;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/cv")
@@ -81,6 +83,23 @@ public class CvUploadController {
 
         log.info("Receive GET CV request for ID {} from user {}", id, principal.getUser().getEmail());
         CvUploadResponse response = cvUploadService.getCvById(principal.getUser().getId(), id);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Update CV PDF and JSON content", description = "Updates the CV's R2 file URL and content JSON by ID.")
+    public ResponseEntity<CvUploadResponse> updateCv(
+            @PathVariable("id") java.util.UUID id,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "content", required = false) String contentJson,
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        log.info("Receive PUT CV request for ID {} from user {}", id, principal.getUser().getEmail());
+        CvUploadResponse response = cvUploadService.updateCv(principal.getUser().getId(), id, file, contentJson);
         return ResponseEntity.ok(response);
     }
 }

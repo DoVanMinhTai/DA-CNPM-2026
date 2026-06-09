@@ -42,4 +42,29 @@ export const cvApi = {
     const { data } = await axiosInstance.get(`/api/cv/${id}`);
     return data;
   },
+
+  /**
+   * Updates the CV PDF file and/or structured JSON content by ID.
+   * 
+   * @param {string} id - The UUID of the CV
+   * @param {File} [file] - Updated PDF file
+   * @param {string} [contentJson] - Serialized CV content JSON string
+   * @returns {Promise<Object>} CvUploadResponse
+   */
+  updateCv: async (id, file, contentJson) => {
+    const formData = new FormData();
+    if (file) {
+      formData.append("file", file);
+    }
+    if (contentJson) {
+      formData.append("content", contentJson);
+    }
+
+    const { data } = await axiosInstance.put(`/api/cv/${id}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return data;
+  },
 };
