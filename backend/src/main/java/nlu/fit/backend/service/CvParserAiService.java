@@ -10,6 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 import nlu.fit.backend.dto.response.CvContentDto;
 import nlu.fit.backend.exception.AiProcessingException;
 import nlu.fit.backend.exception.CvUploadException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -48,6 +51,11 @@ public class CvParserAiService {
      * @param rawText the extracted text from document
      * @return structured CvContentDto
      */
+    @Retryable(
+            retryFor = { RuntimeException.class},
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 3000, multiplier = 2.0)
+    )
     public CvContentDto parseResume(String rawText) {
         log.info("Sending raw text (length: {}) to Gemini for parsing...", rawText.length());
         try {
@@ -70,5 +78,16 @@ public class CvParserAiService {
 
             throw new AiProcessingException("Không thể bóc tách dữ liệu CV do lỗi dịch vụ AI: " + e.getMessage());
         }
+    }
+
+    @Recover
+    public CvContentDto recoverParseResume(RuntimeException e, String rawText) {
+        log.error("Gemini processing failed permanently after 3 attempts.", e);
+
+        if (e.getMessage() != null && e.getMessage().contains("503")) {
+            throw new AiProcessingException("Hệ thống AI của Google hiện đang quá tải. Vui lòng bấm thử lại sau ít giây!");
+        }
+
+        throw new AiProcessingException("Không thể bóc tách dữ liệu CV do lỗi dịch vụ AI kéo dài: " + e.getMessage());
     }
 }
