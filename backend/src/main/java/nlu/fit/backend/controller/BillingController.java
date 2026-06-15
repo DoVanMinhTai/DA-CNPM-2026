@@ -9,11 +9,14 @@ import nlu.fit.backend.entity.enums.SubscriptionStatus;
 import nlu.fit.backend.service.SubscriptionService;
 import nlu.fit.backend.entity.User;
 import nlu.fit.backend.repository.UserRepository;
+import nlu.fit.backend.repository.AiUsageLogRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.OffsetDateTime;
+import java.time.YearMonth;
 import java.util.Map;
 
 @Slf4j
@@ -25,6 +28,7 @@ public class BillingController {
 
     private final SubscriptionService subscriptionService;
     private final UserRepository userRepository;
+    private final AiUsageLogRepository aiUsageLogRepository;
 
     /**
      * Get current subscription and billing information for authenticated user.
@@ -46,6 +50,10 @@ public class BillingController {
             boolean isCancelable = isProOrEnterprise && sub.getStatus() == SubscriptionStatus.ACTIVE;
             boolean isReactivatable = sub.getStatus() == SubscriptionStatus.CANCELLED;
             
+            // Calculate credits used this month
+            OffsetDateTime startOfMonth = OffsetDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+            Integer creditsUsed = aiUsageLogRepository.sumCreditsUsedByUserIdSince(user.getId(), startOfMonth).intValue();
+            
             BillingInfoResponse billingInfo = BillingInfoResponse.builder()
                     .plan(sub.getPlan().name())
                     .status(sub.getStatus().name())
@@ -53,8 +61,9 @@ public class BillingController {
                     .nextBillingDate(sub.getNextBillingDate())
                     .isCancelable(isCancelable)
                     .isReactivatable(isReactivatable)
+                    .creditsUsed(creditsUsed)
                     .build();
-            
+            log.info("Billing info: {}", billingInfo);
             return ResponseEntity.ok(billingInfo);
         } catch (Exception e) {
             log.error("Error fetching billing info", e);

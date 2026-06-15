@@ -6,6 +6,7 @@ import DashboardPage from './pages/Dashboard/DashboardPage'
 import CVEditorPage from './pages/CVEditor/CVEditorPage'
 import CVDetailPage from './pages/CVDetail/CVDetailPage'
 import AIAnalysisPage from './pages/AIAnalysis/AIAnalysisPage'
+import InterviewQuestionsPage from './pages/InterviewQuestions/InterviewQuestionsPage'
 import PricingPage from './pages/Pricing/PricingPage'
 import BillingPage from './pages/Billing/BillingPage'
 import SettingsPage from './pages/Settings/SettingsPage'
@@ -35,6 +36,7 @@ function App() {
           <Route path="/cv/editor/:id" element={<CVEditorPage />} />
           <Route path="/cv/upload" element={<CVUploadPage />} />
           <Route path="/cv/:id" element={<CVDetailPage />} />
+          <Route path="/interviews/cv/:cvId" element={<InterviewQuestionsPage />} />
           <Route path="/ai-analysis" element={<AIAnalysisPage />} />
           <Route path="/billing" element={<BillingPage />} />
           <Route path="/settings" element={<SettingsPage />} />

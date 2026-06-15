@@ -96,6 +96,10 @@ ai:
   gemini:
     api-key: ${GEMINI_API_KEY}
     model-name: gemini-2.5-flash
+  groq:
+    api-key: ${GROQ_API_KEY}
+    model-name: llama-3.3-70b-versatile
+    base-url: https://api.groq.com/openai/v1
 
 vnpay:
   url: ${VNPAY_PAY_URL}

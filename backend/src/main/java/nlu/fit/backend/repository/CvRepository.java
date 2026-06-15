@@ -10,4 +10,6 @@ import java.util.UUID;
 @Repository
 public interface CvRepository extends JpaRepository<Cv, UUID> {
     List<Cv> findByUserIdOrderByUpdatedAtDesc(UUID userId);
+    long countByUserId(UUID userId);
+    long countByUserIdAndCreatedAtAfter(UUID userId, java.time.OffsetDateTime from);
 }

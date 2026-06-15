@@ -26,6 +26,7 @@ import java.util.*;
 public class VNPayService {
 
     private final SubscriptionService subscriptionService;
+    private final nlu.fit.backend.repository.PaymentTransactionRepository paymentTransactionRepository;
 
     @Value("${vnpay.url}")
     private String vnpayUrl;
@@ -98,7 +99,7 @@ public class VNPayService {
         vnpParams.put("vnp_OrderType", "billpayment");
         vnpParams.put("vnp_Locale", "vn");
         vnpParams.put("vnp_ReturnUrl", vnpayReturnUrl);
-        vnpParams.put("vnp_IpAddr", getClientIp(request));
+        vnpParams.put("vnp_IpAddr", "127.0.0.1");
         vnpParams.put("vnp_CreateDate", getCurrentDateTime());
 
         // Generate secure hash
@@ -150,7 +151,15 @@ public class VNPayService {
         UUID userId = UUID.fromString(parts[0]);
         String packageType = parts[1];
 
-        log.info("Payment successful for user: {}, package: {}", userId, packageType);
+        String txnRef = vnpayParams.get("vnp_TxnRef");
+
+        log.info("Payment successful for user: {}, package: {}, txnRef: {}", userId, packageType, txnRef);
+
+        // Idempotency check: if txnRef already processed, skip
+        if (txnRef != null && paymentTransactionRepository.existsByTxnRef(txnRef)) {
+            log.warn("Transaction {} already processed. Skipping duplicate IPN.", txnRef);
+            return;
+        }
 
         // 4. Update subscription based on package type
         PackageInfo packageInfo = PACKAGE_PRICING.get(packageType);
@@ -171,6 +180,15 @@ public class VNPayService {
             // Buy credits (top-up)
             subscriptionService.addCredits(userId, packageInfo.credits);
             log.info("Added {} credits to user: {}", packageInfo.credits, userId);
+        }
+
+        // Mark transaction as processed
+        try {
+            nlu.fit.backend.entity.PaymentTransaction tx = new nlu.fit.backend.entity.PaymentTransaction(txnRef, java.time.OffsetDateTime.now());
+            paymentTransactionRepository.save(tx);
+            log.info("Saved payment transaction record for txnRef={}", txnRef);
+        } catch (Exception e) {
+            log.error("Failed to save payment transaction for txnRef={}", txnRef, e);
         }
     }
 

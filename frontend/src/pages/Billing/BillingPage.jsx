@@ -156,7 +156,10 @@ export default function BillingPage() {
               <span className="text-sm text-outline">/month</span>
             </div>
             <p className="text-sm text-on-surface-variant mb-4">
-              {billing.isCancelled ? `Access until: ${billing.nextBilling}` : `Next billing date: ${billing.nextBilling}`}
+              {billing.isCancelled 
+                ? `Access until: ${billing.nextBilling || 'N/A'}`
+                : `Next billing date: ${billing.nextBilling || 'N/A'}`
+              }
             </p>
 
             <div className="flex gap-2">
@@ -173,7 +176,7 @@ export default function BillingPage() {
               )}
 
               {/* Nút Cancel / Reactivate */}
-              {billing.isCancelable && !billing.isCancelled && (
+              {!billing.isCancelled && (billing.currentPlan === 'PROFESSIONAL' || billing.currentPlan === 'ENTERPRISE') && (
                 <button
                   onClick={handleCancelSubscription}
                   disabled={!!actionLoading}
@@ -262,47 +265,50 @@ export default function BillingPage() {
               <button onClick={() => setIsPlanModalOpen(false)} className="text-outline hover:text-on-surface text-lg font-semibold">✕</button>
             </div>
             <div className="grid md:grid-cols-2 gap-4">
-              {/* Gói Professional */}
-              <div className={`border rounded-xl p-5 flex flex-col justify-between ${billing.currentPlan === 'PROFESSIONAL' ? 'border-primary bg-primary/5' : 'border-outline-variant'}`}>
-                <div>
-                  <h4 className="font-bold text-lg text-primary">PROFESSIONAL</h4>
-                  <p className="text-2xl font-black mt-2 text-on-surface">500,000 VND <span className="text-xs text-outline font-normal">/month</span></p>
-                  <ul className="text-xs text-on-surface-variant space-y-2 mt-4">
-                    <li className="flex items-center gap-2">✓ <strong>500</strong> AI Credits / tháng</li>
-                    <li className="flex items-center gap-2">✓ Phân tích & Chấm điểm CV ATS</li>
-                    <li className="flex items-center gap-2">✓ Xuất file Word (.docx) & PDF</li>
-                  </ul>
-                </div>
-                <button
-                  onClick={() => handleUpgradePlan('PROFESSIONAL')}
-                  disabled={billing.currentPlan === 'PROFESSIONAL'}
-                  className="w-full mt-6 py-2 bg-primary text-white text-sm font-medium rounded hover:bg-primary-dark transition-colors disabled:bg-gray-200 disabled:text-gray-400"
-                >
-                  {billing.currentPlan === 'PROFESSIONAL' ? 'Current Plan' : 'Choose Professional'}
-                </button>
-              </div>
-
-              {/* Gói Enterprise */}
-              <div className="border border-outline-variant rounded-xl p-5 flex flex-col justify-between hover:border-accent transition-all">
-                <div>
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-bold text-lg text-amber-600">ENTERPRISE</h4>
-                    <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded">Best Value</span>
+              {/* Gói Professional - Chỉ hiển thị nếu không phải current plan */}
+              {billing.currentPlan !== 'PROFESSIONAL' && (
+                <div className={`border rounded-xl p-5 flex flex-col justify-between ${billing.currentPlan === 'PROFESSIONAL' ? 'border-primary bg-primary/5' : 'border-outline-variant'}`}>
+                  <div>
+                    <h4 className="font-bold text-lg text-primary">PROFESSIONAL</h4>
+                    <p className="text-2xl font-black mt-2 text-on-surface">500,000 VND <span className="text-xs text-outline font-normal">/month</span></p>
+                    <ul className="text-xs text-on-surface-variant space-y-2 mt-4">
+                      <li className="flex items-center gap-2">✓ <strong>500</strong> AI Credits / tháng</li>
+                      <li className="flex items-center gap-2">✓ Phân tích & Chấm điểm CV ATS</li>
+                      <li className="flex items-center gap-2">✓ Xuất file Word (.docx) & PDF</li>
+                    </ul>
                   </div>
-                  <p className="text-2xl font-black mt-2 text-on-surface">2,000,000 VND <span className="text-xs text-outline font-normal">/month</span></p>
-                  <ul className="text-xs text-on-surface-variant space-y-2 mt-4">
-                    <li className="flex items-center gap-2">✓ <strong>3,000</strong> AI Credits / tháng</li>
-                    <li className="flex items-center gap-2">✓ Ưu tiên băng thông bóc tách AI</li>
-                    <li className="flex items-center gap-2">✓ Hỗ trợ Custom Branding & API</li>
-                  </ul>
+                  <button
+                    onClick={() => handleUpgradePlan('PROFESSIONAL')}
+                    className="w-full mt-6 py-2 bg-primary text-white text-sm font-medium rounded hover:bg-primary-dark transition-colors"
+                  >
+                    Choose Professional
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleUpgradePlan('ENTERPRISE')}
-                  className="w-full mt-6 py-2 bg-accent text-on-surface text-sm font-bold rounded hover:bg-amber-400 transition-colors"
-                >
-                  Choose Enterprise
-                </button>
-              </div>
+              )}
+
+              {/* Gói Enterprise - Luôn hiển thị nếu không phải current plan */}
+              {billing.currentPlan !== 'ENTERPRISE' && (
+                <div className="border border-outline-variant rounded-xl p-5 flex flex-col justify-between hover:border-accent transition-all">
+                  <div>
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-bold text-lg text-amber-600">ENTERPRISE</h4>
+                      <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded">Best Value</span>
+                    </div>
+                    <p className="text-2xl font-black mt-2 text-on-surface">2,000,000 VND <span className="text-xs text-outline font-normal">/month</span></p>
+                    <ul className="text-xs text-on-surface-variant space-y-2 mt-4">
+                      <li className="flex items-center gap-2">✓ <strong>3,000</strong> AI Credits / tháng</li>
+                      <li className="flex items-center gap-2">✓ Ưu tiên băng thông bóc tách AI</li>
+                      <li className="flex items-center gap-2">✓ Hỗ trợ Custom Branding & API</li>
+                    </ul>
+                  </div>
+                  <button
+                    onClick={() => handleUpgradePlan('ENTERPRISE')}
+                    className="w-full mt-6 py-2 bg-accent text-on-surface text-sm font-bold rounded hover:bg-amber-400 transition-colors"
+                  >
+                    Choose Enterprise
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
