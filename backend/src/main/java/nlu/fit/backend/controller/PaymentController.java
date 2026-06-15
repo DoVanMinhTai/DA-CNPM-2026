@@ -45,7 +45,6 @@ public class PaymentController {
             User user = userRepository.findByEmail(userDetails.getUsername())
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
             log.info("Creating payment URL for user: {}, package: {}", user.getId(), packageType);
-            
             String paymentUrl = vnPayService.createVnPayUrl(user.getId(), packageType, request);
             
             return ResponseEntity.ok(Map.of(
@@ -71,7 +70,6 @@ public class PaymentController {
     @GetMapping("/vnpay-return")
     public ResponseEntity<?> handleVNPayReturn(HttpServletRequest request) {
         log.info("Handling VNPay return callback");
-        
         boolean valid = vnPayService.verifySignature(request);
         if (!valid) {
             log.error("Invalid VNPay signature on return");
@@ -80,20 +78,21 @@ public class PaymentController {
                     .build();
         }
 
-        String responseCode = request.getParameter("vnp_ResponseCode");
-        String orderInfo = request.getParameter("vnp_OrderInfo");
-        String txnRef = request.getParameter("vnp_TxnRef");
-        
-        Map<String, String> parsedOrder = vnPayService.parseOrderInfo(orderInfo);
-        String packageType = parsedOrder.get("packageType");
-        
-        String status = "00".equals(responseCode) ? "success" : "fail";
-        String message = "00".equals(responseCode) 
-                ? "Payment successful" 
-                : "Payment failed with code: " + responseCode;
-        
-        log.info("VNPay return: status={}, txnRef={}, package={}", status, txnRef, packageType);
-        
+        // Extract all VNPay params and attempt to process immediately (idempotent)
+        Map<String, String> params = extractVnpayParams(request);
+
+        String status;
+        String message;
+        try {
+            vnPayService.processVnPayIPN(params);
+            status = "success";
+            message = "Payment successful";
+        } catch (Exception e) {
+            log.error("Error processing VNPay return", e);
+            status = "fail";
+            message = e.getMessage() != null ? e.getMessage() : "Payment processing failed";
+        }
+
         String redirectUrl = buildFrontendRedirect(status, message);
         return ResponseEntity.status(HttpStatus.FOUND)
                 .location(URI.create(redirectUrl))
@@ -124,6 +123,25 @@ public class PaymentController {
             return ResponseEntity.ok(Map.of(
                     "RspCode", "99",
                     "Message", "Error: " + e.getMessage()
+            ));
+        }
+    }
+
+    @PostMapping("/confirm-payment")
+    public ResponseEntity<Map<String, String>> confirmPayment(HttpServletRequest request) {
+        log.info("Confirm payment called from frontend");
+        try {
+            Map<String, String> params = extractVnpayParams(request);
+            vnPayService.processVnPayIPN(params);
+            return ResponseEntity.ok(Map.of(
+                    "success", "true",
+                    "message", "Payment confirmed"
+            ));
+        } catch (Exception e) {
+            log.error("Error confirming payment", e);
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", "false",
+                    "message", e.getMessage()
             ));
         }
     }
@@ -205,7 +223,11 @@ public class PaymentController {
     }
 
     private String buildFrontendRedirect(String status, String message) {
-        // You can customize this URL based on your frontend routing
-        return String.format("http://localhost:5173/payment/result?status=%s&message=%s", status, message);
+        try {
+            String encodedMessage = java.net.URLEncoder.encode(message, "UTF-8");
+            return String.format("http://localhost:5173/payment/result?status=%s&message=%s", status, encodedMessage);
+        } catch (Exception e) {
+            return "http://localhost:5173/payment/result?status=fail&message=Error";
+        }
     }
 }

@@ -57,6 +57,9 @@ export default function CVDetailPage() {
             <Edit3 size={14} />
             Edit CV
           </Link>
+          <Link to={`/interviews/cv/${id}`} className="flex items-center gap-1.5 px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded hover:bg-primary/20 transition-colors">
+            Generate Interview Questions
+          </Link>
         </div>
       </div>
 
