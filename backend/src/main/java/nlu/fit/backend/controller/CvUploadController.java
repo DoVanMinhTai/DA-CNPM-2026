@@ -86,6 +86,19 @@ public class CvUploadController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("")
+    @Operation(summary = "Get all CV summaries for current user")
+    public ResponseEntity<java.util.List<nlu.fit.backend.dto.response.CvSummaryDto>> getCvsForUser(
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        java.util.List<nlu.fit.backend.dto.response.CvSummaryDto> list = cvUploadService.getCvsByUser(principal.getUser().getId());
+        return ResponseEntity.ok(list);
+    }
+
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Update CV PDF and JSON content", description = "Updates the CV's R2 file URL and content JSON by ID.")
     public ResponseEntity<CvUploadResponse> updateCv(

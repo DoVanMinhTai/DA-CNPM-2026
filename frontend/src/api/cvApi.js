@@ -42,6 +42,10 @@ export const cvApi = {
     const { data } = await axiosInstance.get(`/api/cv/${id}`);
     return data;
   },
+  getUserCvs: async () => {
+    const { data } = await axiosInstance.get('/api/cv')
+    return data
+  },
 
   /**
    * Updates the CV PDF file and/or structured JSON content by ID.

@@ -38,7 +38,7 @@ public class CvUploadService {
     
     private final S3StorageService s3StorageService;
     private final TextExtractionService textExtractionService;
-    private final CvParserAiService cvParserAiService;
+    private final CvParserRouter cvParserRouter;
     private final SubscriptionService subscriptionService;
     
     private final ObjectMapper objectMapper;
@@ -71,7 +71,7 @@ public class CvUploadService {
         String rawText = textExtractionService.extractText(file);
 
         // 5. Send to Google Gemini for structured parsing
-        CvContentDto cvContentDto = cvParserAiService.parseResume(rawText);
+        CvContentDto cvContentDto = cvParserRouter.parseResume(rawText);
 
         // 5.5 Deduct 1 credit for using the AI feature
         subscriptionService.validateAndConsumeCredit(userId, 1);
@@ -160,6 +160,23 @@ public class CvUploadService {
                 .originalFileUrl(cv.getOriginalFileUrl())
                 .build();
     }
+
+    @Transactional(readOnly = true)
+    public java.util.List<nlu.fit.backend.dto.response.CvSummaryDto> getCvsByUser(UUID userId) {
+        java.util.List<nlu.fit.backend.entity.Cv> cvs = cvRepository.findByUserIdOrderByUpdatedAtDesc(userId);
+        java.util.List<nlu.fit.backend.dto.response.CvSummaryDto> out = new java.util.ArrayList<>();
+        for (nlu.fit.backend.entity.Cv c : cvs) {
+            out.add(new nlu.fit.backend.dto.response.CvSummaryDto(
+                    c.getId(),
+                    c.getTitle(),
+                    c.getAtsScore(),
+                    c.getStatus() != null ? c.getStatus().name().toLowerCase() : "",
+                    c.getUpdatedAt()
+            ));
+        }
+        return out;
+    }
+}
 
     @Transactional
     public CvUploadResponse updateCv(UUID userId, UUID cvId, MultipartFile file, String contentJson) {

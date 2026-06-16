@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom'
 import { Plus, FileText, TrendingUp, Brain, Coins, MoreVertical, Upload } from 'lucide-react'
-import { dashboardUser, dashboardStats, recentDocuments } from '../../data/mockData'
+import { dashboardUser, dashboardStats as mockDashboardStats, recentDocuments as mockRecentDocuments } from '../../data/mockData'
+import { useEffect, useState } from 'react'
+import dashboardApi from '../../api/dashboardApi'
+import { cvApi } from '../../api/cvApi'
 
 const statIcons = { FileText, Brain, TrendingUp, Coins }
 
@@ -17,6 +20,53 @@ function ScoreBadge({ score }) {
 }
 
 export default function DashboardPage() {
+  const [stats, setStats] = useState(mockDashboardStats)
+  const [recentDocs, setRecentDocs] = useState(mockRecentDocuments)
+
+  useEffect(() => {
+    let mounted = true
+    async function load() {
+      try {
+        const data = await dashboardApi.getStatistics()
+        if (!mounted || !data) return
+        const mapped = [
+          { label: 'Total CVs', value: data.totalCVs.value, icon: 'FileText', change: data.totalCVs.change },
+          { label: 'AI Analyses', value: data.aiAnalyses.value, icon: 'Brain', change: data.aiAnalyses.change },
+          { label: 'Avg. Score', value: data.avgScore.value, icon: 'TrendingUp', change: data.avgScore.change },
+          { label: 'Credits', value: data.credits.value, icon: 'Coins', change: data.credits.change },
+        ]
+        setStats(mapped)
+      } catch (e) {
+        // keep mock data on error
+        console.error('Failed to load dashboard stats', e)
+      }
+    }
+    load()
+    return () => { mounted = false }
+  }, [])
+
+  useEffect(() => {
+    let mounted = true
+    async function loadCvs() {
+      try {
+        const data = await cvApi.getUserCvs()
+        if (!mounted || !data) return
+        const mapped = data.map((c) => ({
+          id: c.id,
+          title: c.title,
+          updatedAt: c.updatedAt ? new Date(c.updatedAt).toLocaleString() : '',
+          score: c.score || 0,
+          status: c.status || 'draft',
+        }))
+        setRecentDocs(mapped)
+      } catch (e) {
+        console.error('Failed to load user cvs', e)
+      }
+    }
+    loadCvs()
+    return () => { mounted = false }
+  }, [])
+
   return (
     <div className="p-6 md:p-8 max-w-[1200px]">
       {/* Header */}
@@ -29,7 +79,7 @@ export default function DashboardPage() {
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {dashboardStats.map((stat, i) => {
+        {stats.map((stat, i) => {
           const Icon = statIcons[stat.icon]
           return (
             <div
@@ -70,7 +120,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {recentDocuments.map((doc) => (
+          {recentDocs.map((doc) => (
             <Link
               key={doc.id}
               to={`/cv/${doc.id}`}

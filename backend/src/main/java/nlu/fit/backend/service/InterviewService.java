@@ -3,7 +3,6 @@ package nlu.fit.backend.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
@@ -38,7 +37,7 @@ public class InterviewService {
 
     private final CvRepository cvRepository;
     private final InterviewQuestionRepository interviewQuestionRepository;
-    private final ChatLanguageModel chatLanguageModel;
+    private final InterviewQuestionRouter interviewQuestionRouter;
     private final ObjectMapper objectMapper;
 
     private InterviewQuestionGenerator questionGenerator;
@@ -75,76 +74,6 @@ public class InterviewService {
         private String score3;
         private String score1;
     }
-
-    // ── LangChain4j AI Service Interface ─────────────────────────────────
-
-    interface InterviewQuestionGenerator {
-        @UserMessage(
-            "Bạn là một chuyên gia phỏng vấn kỹ thuật cấp cao với nhiều năm kinh nghiệm tuyển dụng.\n\n" +
-            "## NHIỆM VỤ\n" +
-            "Tạo câu hỏi phỏng vấn được cá nhân hóa dựa trên CV của ứng viên và mô tả công việc (nếu có).\n\n" +
-            "## THÔNG TIN CV CỦA ỨNG VIÊN\n" +
-            "{{cvContent}}\n\n" +
-            "## MÔ TẢ CÔNG VIỆC (JOB DESCRIPTION)\n" +
-            "{{jobDescription}}\n\n" +
-            "## CẤU HÌNH\n" +
-            "- Danh mục câu hỏi cần tạo: {{categories}}\n" +
-            "- Mức độ khó mục tiêu: {{targetDifficulty}} (nếu \"auto\", hãy tự xác định dựa trên kinh nghiệm trong CV)\n" +
-            "- Số lượng câu hỏi: {{limit}}\n\n" +
-            "## QUY TẮC QUAN TRỌNG\n" +
-            "1. CHỈ hỏi về kỹ năng, kinh nghiệm, dự án CÓ trong CV hoặc yêu cầu trong JD\n" +
-            "2. KHÔNG bịa ra thông tin không có trong CV\n" +
-            "3. Mỗi câu hỏi phải có lý do rõ ràng (context) giải thích tại sao hỏi câu này\n" +
-            "4. Ideal answer phải cụ thể, bao gồm các keyword/concept mà ứng viên nên đề cập\n" +
-            "5. Rubric phải rõ ràng, phân biệt được điểm 5, 3, và 1\n" +
-            "6. Câu hỏi behavioral nên theo format STAR (Situation, Task, Action, Result)\n" +
-            "7. Nếu có JD, ưu tiên câu hỏi đánh giá sự phù hợp giữa CV và JD\n" +
-            "8. Tất cả nội dung phải bằng Tiếng Việt\n\n" +
-            "## PHÂN LOẠI MỨC ĐỘ KHÓ\n" +
-            "- junior (0-2 năm): Khái niệm cơ bản, cú pháp, troubleshooting đơn giản\n" +
-            "- mid (3-5 năm): Tích hợp hệ thống, tối ưu, trade-offs, architecture patterns\n" +
-            "- senior (6+ năm): System design, scalability, leadership, mentoring, business alignment\n\n" +
-            "## OUTPUT FORMAT (JSON)\n" +
-            "Trả về JSON với cấu trúc chính xác sau:\n" +
-            "{\n" +
-            "  \"targetJobTitle\": \"<vị trí phù hợp nhất hoặc vị trí từ JD>\",\n" +
-            "  \"difficulty\": \"<junior|mid|senior>\",\n" +
-            "  \"questions\": [\n" +
-            "    {\n" +
-            "      \"id\": \"q_01\",\n" +
-            "      \"category\": \"<technical|experience|behavioral|project>\",\n" +
-            "      \"question\": \"<câu hỏi phỏng vấn>\",\n" +
-            "      \"context\": \"<lý do tại sao hỏi câu này, liên quan đến phần nào trong CV/JD>\",\n" +
-            "      \"idealAnswer\": \"<các điểm chính ứng viên nên đề cập>\",\n" +
-            "      \"difficulty\": \"<junior|mid|senior>\",\n" +
-            "      \"rubric\": {\n" +
-            "        \"score5\": \"<tiêu chí đạt điểm xuất sắc>\",\n" +
-            "        \"score3\": \"<tiêu chí đạt điểm trung bình>\",\n" +
-            "        \"score1\": \"<tiêu chí đạt điểm yếu>\"\n" +
-            "      }\n" +
-            "    }\n" +
-            "  ]\n" +
-            "}"
-        )
-        AiGeneratedQuestions generate(
-            @V("cvContent") String cvContent,
-            @V("jobDescription") String jobDescription,
-            @V("categories") String categories,
-            @V("targetDifficulty") String targetDifficulty,
-            @V("limit") int limit
-        );
-    }
-
-    // ── Initialization ───────────────────────────────────────────────────
-
-    @PostConstruct
-    public void init() {
-        this.questionGenerator = AiServices.builder(InterviewQuestionGenerator.class)
-                .chatLanguageModel(chatLanguageModel)
-                .build();
-    }
-
-    // ── Public API ───────────────────────────────────────────────────────
 
     /**
      * Generate interview questions for a CV, optionally matched against a job description.
@@ -188,7 +117,7 @@ public class InterviewService {
         // 5. Call LLM
         AiGeneratedQuestions aiResult;
         try {
-            aiResult = questionGenerator.generate(
+            aiResult = interviewQuestionRouter.generate(
                     cv.getContent(),
                     jobDescriptionText,
                     categories,
