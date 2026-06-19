@@ -107,7 +107,7 @@ export default function DashboardLayout() {
       {/* Main content */}
       <main className="flex-1 overflow-y-auto">
         {/* Container giới hạn độ rộng và tự động căn giữa */}
-        <div className="max-w-5xl mx-auto w-full p-6">
+        <div className="w-full mx-auto">
           <Outlet />
         </div>
       </main>

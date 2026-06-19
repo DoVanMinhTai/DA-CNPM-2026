@@ -1,4 +1,4 @@
-import { createContext, useState, useCallback, useEffect } from 'react';
+import { createContext, useState, useCallback, useEffect, useRef } from 'react';
 import { authApi } from '../api/authApi';
 import { setAccessToken, clearAccessToken } from '../api/axiosInstance';
 
@@ -59,9 +59,14 @@ export function AuthProvider({ children }) {
     setIsLoading(false);
   }, []);
 
+  const initialized = useRef(false);
+
   // Kiểm tra phiên đăng nhập ngay khi ứng dụng khởi chạy
   useEffect(() => {
-    initAuth();
+    if (!initialized.current) {
+      initialized.current = true;
+      initAuth();
+    }
   }, [initAuth]);
 
   // Đăng ký bộ lắng nghe sự kiện logout toàn cục (từ axios interceptor khi refresh token hết hạn)

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
 import { cvApi } from "../../../api/cvApi";
 
 export default function usePdfExport({
@@ -12,6 +13,10 @@ export default function usePdfExport({
   saveCurrentPageEdits,
   setSaveStatus,
   setOriginalFileUrlState,
+  pdfCanvasRef,
+  currentPage,
+  extractedTexts = {},
+  modifiedTexts = {},
 }) {
   const [saving, setSaving] = useState(false);
 
@@ -43,27 +48,99 @@ export default function usePdfExport({
   };
 
   const generateEditedPdfBytes = async () => {
-    if (!originalFileUrlState) throw new Error("No original PDF file URL");
+    const { PDFDocument, rgb, StandardFonts } = await import("pdf-lib");
+    let pdfDoc;
 
-    const response = await fetch(originalFileUrlState);
-    const arrayBuffer = await response.arrayBuffer();
-    const pdfDoc = await PDFDocument.load(arrayBuffer);
+    if (originalFileUrlState) {
+      const response = await fetch(originalFileUrlState);
+      const arrayBuffer = await response.arrayBuffer();
+      pdfDoc = await PDFDocument.load(arrayBuffer);
+    } else {
+      pdfDoc = await PDFDocument.create();
+      const edits = saveCurrentPageEdits();
+      const numPages = Object.keys(edits).length > 0 ? Math.max(...Object.keys(edits).map(Number)) : 1;
+      for (let i = 0; i < numPages; i++) {
+        pdfDoc.addPage([595.28, 841.89]); // Standard A4 size
+      }
+    }
 
     const finalPageEdits = saveCurrentPageEdits();
-    const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const helveticaBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+    // Đăng ký fontkit để nhúng file .ttf
+    pdfDoc.registerFontkit(fontkit);
+
+    // Tải và nhúng font Roboto chuẩn hỗ trợ tiếng Việt (Identity-H)
+    const robotoBytes = await fetch("/fonts/Roboto-Regular.ttf").then((res) => res.arrayBuffer());
+    const robotoFont = await pdfDoc.embedFont(robotoBytes);
+
+    const robotoBoldBytes = await fetch("/fonts/Roboto-Bold.ttf").then((res) => res.arrayBuffer());
+    const robotoBoldFont = await pdfDoc.embedFont(robotoBoldBytes);
 
     const scaleFactor = zoom / 100;
 
     for (let i = 0; i < pdfDoc.getPageCount(); i++) {
       const pageNum = i + 1;
+      const page = pdfDoc.getPages()[i];
+      const { height: pageHeight } = page.getSize();
+
+      // 1. Draw extracted texts and mask original text
+      const items = extractedTexts[pageNum];
+      if (items && items.length > 0) {
+        for (const item of items) {
+          const mods = modifiedTexts[item.id];
+          const isEdited = mods !== undefined;
+
+          if (!isEdited) continue;
+
+          const modsObj = typeof mods === "string" ? { text: mods } : mods;
+          const currentText = modsObj.text !== undefined ? modsObj.text : item.text;
+
+          const normLeft = item.left / scaleFactor;
+          const normTop = item.top / scaleFactor;
+          const normWidth = item.width / scaleFactor;
+          const normHeight = item.height / scaleFactor;
+          const itemFontSize = modsObj.fontSize || item.fontSize || 16;
+          const fontSize = itemFontSize / scaleFactor;
+
+          const paddingX = 2; // Bù trừ chiều rộng cho chữ in đậm
+          const maskWidth = normWidth + (paddingX * 2);
+
+          const maskHeight = fontSize * 1.25;
+          const pdfX = normLeft - paddingX;
+          const pdfY = pageHeight - normTop - maskHeight;
+
+          // Mask
+          page.drawRectangle({
+            x: pdfX,
+            y: pdfY,
+            width: maskWidth,
+            height: maskHeight,
+            color: rgb(1, 1, 1),
+          });
+
+          // Font
+          const isOriginalBold = item.fontFamily && item.fontFamily.toLowerCase().includes("bold");
+          const isBold = modsObj.isBold !== undefined ? modsObj.isBold : isOriginalBold;
+          const finalFont = isBold ? robotoBoldFont : robotoFont;
+
+          // Color
+          const hexColor = modsObj.color || item.color || "#000000";
+
+          page.drawText(currentText, {
+            x: pdfX,
+            y: pdfY + (normHeight * 0.15),
+            size: fontSize,
+            font: finalFont,
+            color: parseColor(hexColor),
+          });
+        }
+      }
+
+      // 2. Draw fabric canvas objects
       const pageJson = finalPageEdits[pageNum];
       if (!pageJson || !pageJson.objects || pageJson.objects.length === 0) {
         continue;
       }
-
-      const page = pdfDoc.getPages()[i];
-      const { height: pageHeight } = page.getSize();
 
       for (const obj of pageJson.objects) {
         const normLeft = obj.left / scaleFactor;
@@ -75,23 +152,28 @@ export default function usePdfExport({
         const pdfY = pageHeight - normTop - normHeight;
 
         if (obj.isEraser || (obj.type === "rect" && obj.fill === "#FFFFFF")) {
-          page.drawRectangle({
-            x: pdfX,
-            y: pdfY,
-            width: normWidth,
-            height: normHeight,
-            color: rgb(1, 1, 1),
-          });
+          try {
+            page.drawRectangle({
+              x: pdfX,
+              y: pdfY,
+              width: normWidth,
+              height: normHeight,
+              color: rgb(1, 1, 1),
+            });
+          } catch (e) { console.error(e); }
         } else if (obj.type === "i-text" || obj.type === "textbox" || obj.type === "text") {
-          const isBoldObj = obj.fontWeight === "bold";
-          const font = isBoldObj ? helveticaBoldFont : helveticaFont;
-          page.drawText(obj.text, {
-            x: pdfX,
-            y: pdfY + (normHeight * 0.15),
-            size: (obj.fontSize || 16) / scaleFactor,
-            font: font,
-            color: parseColor(obj.fill),
-          });
+          try {
+            if (!obj.text) continue;
+            const isBoldObj = obj.fontWeight === "bold";
+            const font = isBoldObj ? robotoBoldFont : robotoFont;
+            page.drawText(obj.text, {
+              x: pdfX,
+              y: pdfY + (normHeight * 0.15),
+              size: (obj.fontSize || 16) / scaleFactor,
+              font: font,
+              color: parseColor(obj.fill),
+            });
+          } catch (e) { console.error(e); }
         } else if (obj.type === "image") {
           try {
             const src = obj.src;
@@ -150,45 +232,56 @@ export default function usePdfExport({
 
   const [savingVersion, setSavingVersion] = useState(false);
 
-  const handleSave = async () => {
-    setSaving(true);
+  const handleSaveWithFormat = async (format, navigate) => {
+    setSavingVersion(true);
     setSaveStatus("Saving...");
     try {
-      // New logic: Do not compile and upload the PDF file to overwrite the old one.
-      // Only save the structured text content (JSON).
-      await cvApi.updateCvContent(id, JSON.stringify(cvData));
+      const baseName = cvNameState ? cvNameState.replace(/\.[^/.]+$/, "") : "Untitled CV";
+      let fileToUpload;
+
+      if (format === 'pdf') {
+        const pdfBytes = await generateEditedPdfBytes();
+        const blob = new Blob([pdfBytes], { type: "application/pdf" });
+        fileToUpload = new File([blob], `${baseName}.pdf`, { type: "application/pdf" });
+      } else if (format === 'word') {
+        const blob = await generateWordBlob();
+        fileToUpload = new File([blob], `${baseName}.docx`, { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+      } else {
+        throw new Error("Unsupported format");
+      }
+
+      const finalPageEdits = saveCurrentPageEdits();
+      const dataToSave = { 
+        ...cvData, 
+        pageEdits: finalPageEdits,
+        extractedTexts,
+        modifiedTexts
+      };
+
+      let response;
+      if (id) {
+        response = await cvApi.saveCvVersion(id, fileToUpload, JSON.stringify(dataToSave));
+      } else {
+        response = await cvApi.uploadCv(fileToUpload);
+      }
+      
       setSaveStatus("Saved just now");
-    } catch (err) {
-      console.error("Save error: ", err);
-      setSaveStatus("Failed to save");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSaveVersion = async (navigate) => {
-    setSavingVersion(true);
-    try {
-      const pdfBytes = await generateEditedPdfBytes();
-      const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
-      const pdfFile = new File([pdfBlob], cvNameState ? `${cvNameState.replace(/\.[^/.]+$/, "")}_version.pdf` : "cv_version.pdf", { type: "application/pdf" });
-
-      const response = await cvApi.saveCvVersion(id, pdfFile, JSON.stringify(cvData));
       if (response && response.cvId) {
         if (navigate) {
-          navigate(`/cv/editor/${response.cvId}`, { 
-            state: { 
+          navigate(`/cv/editor/${response.cvId}`, {
+            state: {
               cvData: response.content,
               cvId: response.cvId,
               originalFileUrl: response.originalFileUrl,
               cvName: response.title
-            } 
+            }
           });
         }
         return response;
       }
     } catch (err) {
       console.error("Failed to save CV version:", err);
+      setSaveStatus("Failed to save");
       throw err;
     } finally {
       setSavingVersion(false);
@@ -201,18 +294,144 @@ export default function usePdfExport({
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = cvNameState || "edited_cv.pdf";
+      const baseName = cvNameState ? cvNameState.replace(/\.[^/.]+$/, "") : "Untitled CV";
+      link.download = `${baseName}.pdf`;
       link.click();
     } catch (err) {
       console.error("Export error: ", err);
+      alert("Lỗi xuất PDF: " + (err.message || err.toString()));
+    }
+  };
+
+  const generateWordBlob = async () => {
+    const { Document, Packer, Paragraph, TextRun } = await import("docx");
+    const finalPageEdits = saveCurrentPageEdits();
+
+    const children = [];
+
+    // Process extracted texts first
+    Object.keys(extractedTexts).forEach(pageNum => {
+      const items = extractedTexts[pageNum];
+      if (items && items.length > 0) {
+        const sortedItems = [...items].sort((a, b) => a.top - b.top);
+        sortedItems.forEach(item => {
+          const currentText = modifiedTexts[item.id] !== undefined ? modifiedTexts[item.id] : item.text;
+          const textLines = currentText.split('\n');
+          textLines.forEach(line => {
+            children.push(
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: line,
+                    size: (item.fontSize || 16) * 2, // docx uses half-points
+                  }),
+                ],
+              })
+            );
+          });
+        });
+      }
+    });
+
+    // Process fabric edits
+    Object.keys(finalPageEdits).forEach(pageNum => {
+      const page = finalPageEdits[pageNum];
+      if (page && page.objects) {
+        const sortedObjects = [...page.objects].sort((a, b) => a.top - b.top);
+
+        sortedObjects.forEach(obj => {
+          if ((obj.type === "i-text" || obj.type === "textbox" || obj.type === "text") && obj.text) {
+            const textLines = obj.text.split('\n');
+            textLines.forEach(line => {
+              children.push(
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: line,
+                      bold: obj.fontWeight === "bold",
+                      italics: obj.fontStyle === "italic",
+                      size: (obj.fontSize || 16) * 2, // docx uses half-points
+                    }),
+                  ],
+                })
+              );
+            });
+          }
+        });
+      }
+    });
+
+    if (children.length === 0) {
+      children.push(new Paragraph({ text: "Tài liệu này không chứa nội dung văn bản nào." }));
+    }
+
+    const doc = new Document({
+      sections: [
+        {
+          properties: {},
+          children: children,
+        },
+      ],
+    });
+
+    return await Packer.toBlob(doc);
+  };
+
+  const handleExportWord = async () => {
+    try {
+      const blob = await generateWordBlob();
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      const baseName = cvNameState ? cvNameState.replace(/\.[^/.]+$/, "") : "Untitled CV";
+      link.download = `${baseName}.docx`;
+      link.click();
+    } catch (err) {
+      console.error("Export Word error: ", err);
+    }
+  };
+
+  const handleExportImage = async () => {
+    try {
+      if (!pdfCanvasRef || !pdfCanvasRef.current) return;
+      if (!fabricCanvasInstanceRef || !fabricCanvasInstanceRef.current) return;
+
+      const pdfCanvas = pdfCanvasRef.current;
+      const fabricCanvas = fabricCanvasInstanceRef.current;
+
+      const mergedCanvas = document.createElement("canvas");
+      mergedCanvas.width = pdfCanvas.width;
+      mergedCanvas.height = pdfCanvas.height;
+      const ctx = mergedCanvas.getContext("2d");
+
+      ctx.drawImage(pdfCanvas, 0, 0);
+
+      // Safe export of fabric canvas
+      const fabricDataUrl = fabricCanvas.toDataURL({ format: "png", quality: 1, multiplier: 1 });
+      const img = new Image();
+      img.src = fabricDataUrl;
+      await new Promise(resolve => {
+        img.onload = resolve;
+        img.onerror = resolve; // Continue even if image load fails
+      });
+      ctx.drawImage(img, 0, 0, pdfCanvas.width, pdfCanvas.height);
+
+      const dataUrl = mergedCanvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      const baseName = cvNameState ? cvNameState.replace(/\.[^/.]+$/, "") : "Untitled CV";
+      link.download = `${baseName}_page_${currentPage || 1}.png`;
+      link.click();
+    } catch (err) {
+      console.error("Export Image error:", err);
     }
   };
 
   return {
     saving,
     savingVersion,
-    handleSave,
-    handleSaveVersion,
+    handleSaveWithFormat,
     handleExportPdf,
+    handleExportWord,
+    handleExportImage,
   };
 }

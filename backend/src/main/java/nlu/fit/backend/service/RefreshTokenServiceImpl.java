@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Base64;
@@ -53,7 +54,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         String publicToken = encodeToken(userId, tokenId);
 
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(jwtProperties.getRefreshTokenExpiration());
+        LocalDateTime expiresAt = LocalDateTime.now().plus(Duration.ofMillis(jwtProperties.getRefreshTokenExpiration()));
 
         RefreshTokenInfo tokenInfo = RefreshTokenInfo.builder()
                 .token(publicToken)

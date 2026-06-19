@@ -17,6 +17,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.web.servlet.HandlerExceptionResolver;
+import io.jsonwebtoken.ExpiredJwtException;
+import nlu.fit.backend.exception.TokenExpiredException;
+import nlu.fit.backend.exception.InvalidTokenException;
 
 @Component
 @RequiredArgsConstructor
@@ -25,6 +31,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomUserDetailsService customUserDetailsService;
+
+    @Autowired
+    @Qualifier("handlerExceptionResolver")
+    private HandlerExceptionResolver exceptionResolver;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -43,6 +53,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
+        } catch (ExpiredJwtException ex) {
+            log.warn("Access token expired");
+            exceptionResolver.resolveException(request, response, null, new TokenExpiredException("Hết phiên đăng nhập"));
+            return;
+        } catch (io.jsonwebtoken.JwtException | IllegalArgumentException ex) {
+            log.warn("Invalid JWT token");
+            exceptionResolver.resolveException(request, response, null, new InvalidTokenException("Token không hợp lệ"));
+            return;
         } catch (Exception ex) {
             log.error("Could not set user authentication in security context", ex);
         }

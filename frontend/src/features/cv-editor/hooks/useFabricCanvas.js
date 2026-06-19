@@ -1,20 +1,165 @@
 import { useState, useEffect, useRef } from "react";
 import { fabric } from "fabric";
 
-export default function useFabricCanvas({ canvasWidth, canvasHeight, zoom, currentPage, setCurrentPage }) {
+export default function useFabricCanvas({ 
+  canvasWidth, canvasHeight, zoom, currentPage, setCurrentPage, initialPageEdits, 
+  modifiedTexts, setModifiedTexts 
+}) {
   const [activeTool, setActiveTool] = useState("select");
   const [selectedElement, setSelectedElement] = useState(null);
   const [selectedFont, setSelectedFont] = useState("Inter");
-  const [fontSize, setFontSize] = useState(16);
+  const [fontSize, setFontSize] = useState(12);
   const [isBold, setIsBold] = useState(true);
   const [isItalic, setIsItalic] = useState(false);
   const [textAlign, setTextAlign] = useState("left");
-  const [activeColor, setActiveColor] = useState("#008080");
+  const [activeColor, setActiveColor] = useState("#000000");
   const [opacity, setOpacity] = useState(85);
   const [pageEdits, setPageEdits] = useState({});
 
   const fabricCanvasRef = useRef(null);
   const fabricCanvasInstanceRef = useRef(null);
+
+  const [historyIndexState, setHistoryIndexState] = useState(-1);
+  const [historyLengthState, setHistoryLengthState] = useState(0);
+  const historyRef = useRef([]);
+  const historyIndexRef = useRef(-1);
+  const pageEditsRef = useRef({});
+  const currentPageRef = useRef(currentPage);
+  const isHistoryAction = useRef(false);
+  const modifiedTextsRef = useRef(modifiedTexts);
+  const prevModifiedTexts = useRef(modifiedTexts);
+
+  useEffect(() => { currentPageRef.current = currentPage; }, [currentPage]);
+  useEffect(() => { pageEditsRef.current = pageEdits; }, [pageEdits]);
+  useEffect(() => { modifiedTextsRef.current = modifiedTexts; }, [modifiedTexts]);
+
+  // Tự động lưu lịch sử khi modifiedTexts thay đổi (do user sửa chữ trên DOM)
+  useEffect(() => {
+    if (modifiedTexts !== prevModifiedTexts.current) {
+      if (!isHistoryAction.current) {
+         saveState(modifiedTexts);
+      }
+      prevModifiedTexts.current = modifiedTexts;
+    }
+  }, [modifiedTexts]);
+
+  const saveState = (explicitModifiedTexts = null) => {
+    if (isHistoryAction.current) return;
+    const fCanvas = fabricCanvasInstanceRef.current;
+    if (!fCanvas) return;
+
+    const json = fCanvas.toJSON(["isEraser"]);
+    const newPageEdits = { ...pageEditsRef.current, [currentPageRef.current]: json };
+    const currentModifiedTexts = explicitModifiedTexts || modifiedTextsRef.current || {};
+
+    const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
+    newHistory.push({ 
+      pageEdits: newPageEdits, 
+      modifiedTexts: { ...currentModifiedTexts },
+      currentPage: currentPageRef.current 
+    });
+
+    historyRef.current = newHistory;
+    historyIndexRef.current = newHistory.length - 1;
+    setHistoryIndexState(historyIndexRef.current);
+    setHistoryLengthState(historyRef.current.length);
+    setPageEdits(newPageEdits);
+  };
+
+  const handleUndo = () => {
+    if (historyIndexRef.current > 0) {
+      isHistoryAction.current = true;
+      historyIndexRef.current -= 1;
+      setHistoryIndexState(historyIndexRef.current);
+      const state = historyRef.current[historyIndexRef.current];
+      
+      setPageEdits(state.pageEdits);
+      if (setModifiedTexts) {
+        setModifiedTexts(state.modifiedTexts || {});
+      }
+      
+      if (state.currentPage !== currentPageRef.current) {
+        setCurrentPage(state.currentPage);
+        // The currentPage useEffect will handle loading the JSON and resetting isHistoryAction
+      } else {
+        const fCanvas = fabricCanvasInstanceRef.current;
+        if (fCanvas) {
+          fCanvas.clear();
+          if (state.pageEdits[currentPageRef.current]) {
+            fCanvas.loadFromJSON(state.pageEdits[currentPageRef.current], () => {
+              fCanvas.renderAll();
+              isHistoryAction.current = false;
+            });
+          } else {
+            fCanvas.renderAll();
+            isHistoryAction.current = false;
+          }
+        } else {
+          isHistoryAction.current = false;
+        }
+      }
+    }
+  };
+
+  const handleRedo = () => {
+    if (historyIndexRef.current < historyRef.current.length - 1) {
+      isHistoryAction.current = true;
+      historyIndexRef.current += 1;
+      setHistoryIndexState(historyIndexRef.current);
+      const state = historyRef.current[historyIndexRef.current];
+      
+      setPageEdits(state.pageEdits);
+      if (setModifiedTexts) {
+        setModifiedTexts(state.modifiedTexts || {});
+      }
+      
+      if (state.currentPage !== currentPageRef.current) {
+        setCurrentPage(state.currentPage);
+      } else {
+        const fCanvas = fabricCanvasInstanceRef.current;
+        if (fCanvas) {
+          fCanvas.clear();
+          if (state.pageEdits[currentPageRef.current]) {
+            fCanvas.loadFromJSON(state.pageEdits[currentPageRef.current], () => {
+              fCanvas.renderAll();
+              isHistoryAction.current = false;
+            });
+          } else {
+            fCanvas.renderAll();
+            isHistoryAction.current = false;
+          }
+        } else {
+          isHistoryAction.current = false;
+        }
+      }
+    }
+  };
+
+  // Khởi tạo state rỗng ban đầu để có thể Undo về trạng thái nguyên thủy
+  useEffect(() => {
+    if (historyRef.current.length === 0) {
+      const initialState = { 
+        pageEdits: initialPageEdits || {}, 
+        modifiedTexts: {}, 
+        currentPage: currentPage 
+      };
+      historyRef.current = [initialState];
+      historyIndexRef.current = 0;
+      setHistoryIndexState(0);
+      setHistoryLengthState(1);
+
+      if (initialPageEdits && Object.keys(initialPageEdits).length > 0) {
+        setPageEdits(initialPageEdits);
+        const fCanvas = fabricCanvasInstanceRef.current;
+        if (fCanvas && initialPageEdits[currentPage]) {
+          fCanvas.loadFromJSON(initialPageEdits[currentPage], () => {
+            fCanvas.setZoom(zoom / 100);
+            fCanvas.renderAll();
+          });
+        }
+      }
+    }
+  }, [initialPageEdits]);
 
   // Helper function to convert hex to rgba
   const hexToRgba = (hex, alpha) => {
@@ -63,6 +208,14 @@ export default function useFabricCanvas({ canvasWidth, canvasHeight, zoom, curre
     canvas.on("selection:created", (e) => handleSelection(e.target));
     canvas.on("selection:updated", (e) => handleSelection(e.target));
     canvas.on("selection:cleared", () => setSelectedElement(null));
+
+    canvas.on("object:added", (e) => {
+      if (e.target && e.target.isEraser) return; 
+      saveState();
+    });
+    canvas.on("object:modified", saveState);
+    canvas.on("object:removed", saveState);
+    canvas.on("path:created", saveState);
 
     return () => {
       canvas.dispose();
@@ -234,6 +387,7 @@ export default function useFabricCanvas({ canvasWidth, canvasHeight, zoom, curre
       isDrawingRect = false;
       rect = null;
       setActiveTool("select");
+      saveState();
     };
 
     canvas.on("mouse:down", handleMouseDown);
@@ -314,9 +468,11 @@ export default function useFabricCanvas({ canvasWidth, canvasHeight, zoom, curre
       fCanvas.loadFromJSON(edits, () => {
         fCanvas.setZoom(zoom / 100);
         fCanvas.renderAll();
+        isHistoryAction.current = false;
       });
     } else {
       fCanvas.renderAll();
+      isHistoryAction.current = false;
     }
   }, [currentPage]);
 
@@ -384,6 +540,8 @@ export default function useFabricCanvas({ canvasWidth, canvasHeight, zoom, curre
     canvas.renderAll();
   };
 
+
+
   const handleDeleteElement = () => {
     const canvas = fabricCanvasInstanceRef.current;
     const active = canvas?.getActiveObject();
@@ -425,6 +583,66 @@ export default function useFabricCanvas({ canvasWidth, canvasHeight, zoom, curre
     setShowUploadModal(false);
   };
 
+  const deletePageEdits = (pageNum) => {
+    setPageEdits(prev => {
+      const next = { ...prev };
+      
+      const fCanvas = fabricCanvasInstanceRef.current;
+      if (fCanvas) {
+        next[currentPage] = fCanvas.toJSON(["isEraser"]);
+      }
+
+      delete next[pageNum];
+      const maxPage = Math.max(0, ...Object.keys(next).map(Number));
+      for(let i = pageNum + 1; i <= maxPage; i++) {
+        if (next[i]) {
+          next[i - 1] = next[i];
+          delete next[i];
+        }
+      }
+      return next;
+    });
+  };
+
+  const movePageEdits = (fromPage, toPage) => {
+    setPageEdits(prev => {
+      const next = { ...prev };
+      
+      const fCanvas = fabricCanvasInstanceRef.current;
+      if (fCanvas) {
+        next[currentPage] = fCanvas.toJSON(["isEraser"]);
+      }
+
+      const maxPage = Math.max(0, ...Object.keys(next).map(Number), fromPage, toPage);
+      
+      const arr = [];
+      for(let i=1; i<=maxPage; i++) arr.push(next[i] || null);
+      
+      const element = arr.splice(fromPage - 1, 1)[0];
+      arr.splice(toPage - 1, 0, element);
+      
+      const newObj = {};
+      arr.forEach((item, index) => {
+        if (item) newObj[index + 1] = item;
+      });
+      return newObj;
+    });
+  };
+
+  const resetCanvas = () => {
+    setPageEdits({});
+    pageEditsRef.current = {};
+    historyRef.current = [];
+    historyIndexRef.current = -1;
+    setHistoryIndexState(-1);
+    setHistoryLengthState(0);
+    const fCanvas = fabricCanvasInstanceRef.current;
+    if (fCanvas) {
+      fCanvas.clear();
+      fCanvas.renderAll();
+    }
+  };
+
   return {
     fabricCanvasRef,
     fabricCanvasInstanceRef,
@@ -454,5 +672,12 @@ export default function useFabricCanvas({ canvasWidth, canvasHeight, zoom, curre
     handleDeleteElement,
     handleImageConfirm,
     saveCurrentPageEdits,
+    handleUndo,
+    handleRedo,
+    canUndo: historyIndexState > 0,
+    canRedo: historyIndexState < historyLengthState - 1,
+    deletePageEdits,
+    movePageEdits,
+    resetCanvas,
   };
 }
