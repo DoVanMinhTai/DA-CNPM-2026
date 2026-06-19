@@ -176,7 +176,6 @@ public class CvUploadService {
         }
         return out;
     }
-}
 
     @Transactional
     public CvUploadResponse updateCv(UUID userId, UUID cvId, MultipartFile file, String contentJson) {

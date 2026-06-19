@@ -148,24 +148,50 @@ export default function usePdfExport({
     return await pdfDoc.save();
   };
 
+  const [savingVersion, setSavingVersion] = useState(false);
+
   const handleSave = async () => {
     setSaving(true);
     setSaveStatus("Saving...");
     try {
-      const pdfBytes = await generateEditedPdfBytes();
-      const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
-      const pdfFile = new File([pdfBlob], cvNameState || "updated_cv.pdf", { type: "application/pdf" });
-
-      const updatedData = await cvApi.updateCv(id, pdfFile, JSON.stringify(cvData));
+      // New logic: Do not compile and upload the PDF file to overwrite the old one.
+      // Only save the structured text content (JSON).
+      await cvApi.updateCvContent(id, JSON.stringify(cvData));
       setSaveStatus("Saved just now");
-      if (updatedData && updatedData.originalFileUrl) {
-        setOriginalFileUrlState(updatedData.originalFileUrl);
-      }
     } catch (err) {
       console.error("Save error: ", err);
       setSaveStatus("Failed to save");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveVersion = async (navigate) => {
+    setSavingVersion(true);
+    try {
+      const pdfBytes = await generateEditedPdfBytes();
+      const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
+      const pdfFile = new File([pdfBlob], cvNameState ? `${cvNameState.replace(/\.[^/.]+$/, "")}_version.pdf` : "cv_version.pdf", { type: "application/pdf" });
+
+      const response = await cvApi.saveCvVersion(id, pdfFile, JSON.stringify(cvData));
+      if (response && response.cvId) {
+        if (navigate) {
+          navigate(`/cv/editor/${response.cvId}`, { 
+            state: { 
+              cvData: response.content,
+              cvId: response.cvId,
+              originalFileUrl: response.originalFileUrl,
+              cvName: response.title
+            } 
+          });
+        }
+        return response;
+      }
+    } catch (err) {
+      console.error("Failed to save CV version:", err);
+      throw err;
+    } finally {
+      setSavingVersion(false);
     }
   };
 
@@ -184,7 +210,9 @@ export default function usePdfExport({
 
   return {
     saving,
+    savingVersion,
     handleSave,
+    handleSaveVersion,
     handleExportPdf,
   };
 }

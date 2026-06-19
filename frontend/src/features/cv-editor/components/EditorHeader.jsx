@@ -17,8 +17,10 @@ export default function EditorHeader({
   onZoomIn,
   onZoomOut,
   onSave,
+  onSaveVersion,
   onExportPdf,
   saving,
+  savingVersion,
   saveStatus,
 }) {
   return (
@@ -100,6 +102,15 @@ export default function EditorHeader({
           >
             <Save size={14} />
             {saving ? "Saving..." : "Save"}
+          </button>
+          <button
+            onClick={onSaveVersion}
+            disabled={savingVersion}
+            className="flex items-center gap-2 px-3 py-2 border border-outline/40 rounded-xl font-bold text-xs hover:bg-surface-container-high transition-all text-outline disabled:opacity-50"
+            title="Save the edited PDF file as a new version (creates a new CV)"
+          >
+            <Save size={14} />
+            {savingVersion ? "Saving Version..." : "Save as Version"}
           </button>
           <div className="relative group">
             <button className="flex items-center gap-2 px-3 py-2 bg-primary text-white rounded-xl font-bold text-xs hover:bg-primary-dark transition-all shadow-sm">

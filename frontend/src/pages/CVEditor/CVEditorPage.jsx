@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
 import usePdfRenderer from "../../features/cv-editor/hooks/usePdfRenderer";
 import useFabricCanvas from "../../features/cv-editor/hooks/useFabricCanvas";
 import usePdfExport from "../../features/cv-editor/hooks/usePdfExport";
@@ -13,6 +13,7 @@ import ImageUploadModal from "../../features/cv-editor/components/ImageUploadMod
 export default function CVEditorPage() {
   const location = useLocation();
   const { id } = useParams();
+  const navigate = useNavigate();
   const {
     cvData: stateCvData,
     cvId: stateCvId,
@@ -79,7 +80,9 @@ export default function CVEditorPage() {
   // Hook 3: Export & save PDF compilation
   const {
     saving,
+    savingVersion,
     handleSave,
+    handleSaveVersion,
     handleExportPdf,
   } = usePdfExport({
     originalFileUrlState,
@@ -115,8 +118,10 @@ export default function CVEditorPage() {
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
         onSave={handleSave}
+        onSaveVersion={() => handleSaveVersion(navigate)}
         onExportPdf={handleExportPdf}
         saving={saving}
+        savingVersion={savingVersion}
         saveStatus={saveStatus}
       />
 

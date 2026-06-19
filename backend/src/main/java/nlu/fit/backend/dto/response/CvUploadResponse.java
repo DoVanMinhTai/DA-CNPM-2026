@@ -17,4 +17,5 @@ public class CvUploadResponse {
     private CvContentDto content;
     private String originalFileUrl;
     private Integer remainingCredits;
+    private java.time.OffsetDateTime updatedAt;
 }

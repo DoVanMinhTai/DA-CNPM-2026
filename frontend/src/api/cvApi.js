@@ -71,4 +71,44 @@ export const cvApi = {
     });
     return data;
   },
+
+  /**
+   * Updates the CV's structured JSON content by ID without touching the PDF.
+   * 
+   * @param {string} id - The UUID of the CV
+   * @param {string} [contentJson] - Serialized CV content JSON string
+   * @returns {Promise<Object>} CvUploadResponse
+   */
+  updateCvContent: async (id, contentJson) => {
+    const params = new URLSearchParams();
+    if (contentJson) {
+      params.append("content", contentJson);
+    }
+
+    const { data } = await axiosInstance.put(`/api/cv/${id}/content`, params);
+    return data;
+  },
+
+  /**
+   * Saves the edited CV as a new version (creates a new CV draft).
+   * 
+   * @param {string} id - The parent CV ID
+   * @param {File} file - Compiled PDF file
+   * @param {string} [contentJson] - Serialized JSON content string
+   * @returns {Promise<Object>} CvUploadResponse
+   */
+  saveCvVersion: async (id, file, contentJson) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    if (contentJson) {
+      formData.append("content", contentJson);
+    }
+
+    const { data } = await axiosInstance.post(`/api/cv/${id}/version`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return data;
+  },
 };
