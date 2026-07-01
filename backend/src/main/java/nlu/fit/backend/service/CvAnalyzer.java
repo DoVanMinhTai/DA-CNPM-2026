@@ -1,7 +1,9 @@
 package nlu.fit.backend.service;
 
+import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
+import nlu.fit.backend.dto.response.AtsEvaluationResult;
 
 public interface CvAnalyzer {
     @UserMessage("Bạn là một chuyên gia tuyển dụng cấp cao và chuyên gia ATS. Hãy phân tích nội dung CV dưới dạng JSON dưới đây và đưa ra đánh giá phân tích chi tiết.\n\n" +
@@ -27,4 +29,20 @@ public interface CvAnalyzer {
             "}\n" +
             "Lưu ý: Tất cả các đoạn text hướng dẫn và loại hình gợi ý trong suggestions phải viết bằng Tiếng Việt.")
     CvAnalysisService.CvAnalysisAiResult analyze(@V("cvContent") String cvContent);
+
+    @SystemMessage("""
+        Bạn là một hệ thống ATS (Applicant Tracking System) thông minh và là chuyên gia sàng lọc CV cao cấp.
+        Nhiệm vụ của bạn là phân tích sâu cấu trúc dữ liệu JSON của CV người ứng tuyển, đối chiếu khắt khe với Mô tả công việc (Job Description - JD).
+        Hãy tính toán chính xác điểm tương thích (0-100) dựa trên: kỹ năng (skills), kinh nghiệm (experience), học vấn, và các dự án liên quan.
+        """)
+    @UserMessage("""
+        Hãy tiến hành chấm điểm ATS cho CV dựa trên thông tin dưới đây:
+        
+        [Yêu cầu công việc - Job Description (JD)]:
+        {{jd}}
+        
+        [Dữ liệu JSON của CV ứng viên]:
+        {{cvJson}}
+        """)
+    AtsEvaluationResult evaluateAts(@V("cvJson") String cvJson, @V("jd") String jd);
 }

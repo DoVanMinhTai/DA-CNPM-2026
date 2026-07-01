@@ -10,6 +10,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { cvApi } from "../../api/cvApi";
+import { atsApi } from "../../api/atsApi";
 import { toast } from "sonner";
 
 function ScoreRing({ score, size = 80, strokeWidth = 6 }) {
@@ -54,12 +55,15 @@ function ScoreRing({ score, size = 80, strokeWidth = 6 }) {
   );
 }
 
-export default function CVDetailPage() {
+export default function AlAnalysisCV() {
   const { id } = useParams();
   const [cv, setCv] = useState(null);
-  const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [jobDescription, setJobDescription] = useState("");
+  const [analysis, setAnalysis] = useState(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -69,22 +73,12 @@ export default function CVDetailPage() {
         setLoading(true);
         setError(null);
 
-        // Fetch CV detail and AI Analysis in parallel
-        const [cvResponse, analysisResponse] = await Promise.all([
-          cvApi.getCvById(id),
-          cvApi.getCvAnalysis(id).catch((err) => {
-            console.warn("Failed to get or create AI analysis on load:", err);
-            return null;
-          }),
-        ]);
+        const cvResponse = await cvApi.getCvById(id);
 
         if (!mounted) return;
 
         if (cvResponse) {
           setCv(cvResponse);
-        }
-        if (analysisResponse) {
-          setAnalysis(analysisResponse);
         }
       } catch (err) {
         console.error("Error loading CV detail page data:", err);
@@ -104,16 +98,23 @@ export default function CVDetailPage() {
     };
   }, [id]);
 
-  const handleDownload = () => {
-    if (cv?.originalFileUrl) {
-      window.open(cv.originalFileUrl, "_blank");
-    } else {
-      toast.error("Original file URL not found.");
+  const handleAnalyzeCv = async () => {
+    if (!jobDescription.trim()) {
+      toast.error("Please enter a job description first.");
+      return;
     }
-  };
-
-  const handlePrint = () => {
-    window.print();
+    try {
+      setAnalyzing(true);
+      setAnalysisError(null);
+      const result = await atsApi.scoreCv(cv.content, jobDescription);
+      setAnalysis(result);
+    } catch (err) {
+      console.error("Error analyzing CV:", err);
+      setAnalysisError("Failed to analyze CV. Please try again later.");
+      toast.error("Failed to analyze CV.");
+    } finally {
+      setAnalyzing(false);
+    }
   };
 
   if (loading) {
@@ -172,7 +173,7 @@ export default function CVDetailPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
           <Link
-            to="/dashboard"
+            to="/ai-analysis"
             className="p-2 hover:bg-surface-container rounded-lg transition-colors"
           >
             <ArrowLeft size={20} className="text-on-surface-variant" />
@@ -185,39 +186,6 @@ export default function CVDetailPage() {
               Last updated: {formattedDate}
             </p>
           </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <button className="flex items-center gap-1.5 px-3 py-2 text-sm text-on-surface-variant hover:bg-surface-container rounded transition-colors">
-            <Share2 size={14} />
-            Share
-          </button>
-          <button
-            onClick={handlePrint}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm text-on-surface-variant hover:bg-surface-container rounded transition-colors"
-          >
-            <Printer size={14} />
-            Print
-          </button>
-          <button
-            onClick={handleDownload}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm text-on-surface-variant hover:bg-surface-container rounded transition-colors"
-          >
-            <Download size={14} />
-            Export
-          </button>
-          <Link
-            to={`/cv/editor/${id}`}
-            className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-medium rounded hover:bg-primary-dark transition-colors"
-          >
-            <Edit3 size={14} />
-            Edit CV
-          </Link>
-          <Link
-            to={`/interviews/cv/${id}`}
-            className="flex items-center gap-1.5 px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded hover:bg-primary/20 transition-colors"
-          >
-            Generate Interview Questions
-          </Link>
         </div>
       </div>
 
@@ -390,92 +358,117 @@ export default function CVDetailPage() {
           <div className="bg-surface-container-lowest rounded-lg border border-outline-variant p-5">
             <h3 className="text-sm font-bold text-on-surface mb-4 flex items-center gap-2">
               <Sparkles size={16} className="text-primary" />
-              AI Analysis
+              Job Description
             </h3>
-            {analysis ? (
-              <div className="flex flex-col items-center justify-center">
-                <div className="flex items-center justify-center mb-4">
-                  <ScoreRing
-                    score={analysis.overallScore}
-                    size={100}
-                    strokeWidth={8}
-                  />
-                </div>
-                <p className="text-center text-sm text-on-surface-variant">
-                  Overall CV Score
-                </p>
-              </div>
-            ) : (
-              <div className="text-center py-4">
-                <p className="text-xs text-outline mb-3">
-                  No AI Analysis available.
-                </p>
-                <button
-                  onClick={async () => {
-                    try {
-                      setLoading(true);
-                      const analysisData = await cvApi.getCvAnalysis(id);
-                      setAnalysis(analysisData);
-                      toast.success("Successfully generated AI analysis!");
-                    } catch (err) {
-                      toast.error("Failed to trigger AI analysis.");
-                    } finally {
-                      setLoading(false);
-                    }
-                  }}
-                  className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-semibold rounded"
-                >
+
+            <textarea
+              value={jobDescription}
+              onChange={(e) => setJobDescription(e.target.value)}
+              placeholder="Paste the job description here..."
+              rows={6}
+              className="w-full text-sm text-on-surface bg-surface-container border border-outline-variant rounded-lg p-3 resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 mb-3"
+            />
+
+            <button
+              onClick={handleAnalyzeCv}
+              disabled={analyzing}
+              className="w-full px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-semibold rounded flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+            >
+              {analyzing ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  Analyzing...
+                </>
+              ) : (
+                <>
+                  <Sparkles size={14} />
                   Analyze CV Now
-                </button>
-              </div>
+                </>
+              )}
+            </button>
+
+            {analysisError && (
+              <p className="text-xs text-error mt-2">{analysisError}</p>
             )}
           </div>
 
-          {/* Category scores */}
-          {analysis &&
-            analysis.categories &&
-            analysis.categories.length > 0 && (
-              <div className="bg-surface-container-lowest rounded-lg border border-outline-variant p-5">
-                <h3 className="text-sm font-bold text-on-surface mb-4">
-                  Score Breakdown
-                </h3>
-                <div className="space-y-3">
-                  {analysis.categories.map((cat) => (
-                    <div key={cat.name}>
-                      <div className="flex items-center justify-between text-xs mb-1">
-                        <span className="text-on-surface-variant">
-                          {cat.name}
-                        </span>
-                        <span className="font-bold text-on-surface">
-                          {cat.score}%
-                        </span>
-                      </div>
-                      <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-primary rounded-full transition-all duration-1000 ease-out"
-                          style={{ width: `${cat.score}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+          {/* ATS Evaluation Result */}
+          {analysis && (
+            <div className="bg-surface-container-lowest rounded-lg border border-outline-variant p-5 animate-fade-in">
+              <h3 className="text-sm font-bold text-on-surface mb-4">
+                ATS Evaluation Result
+              </h3>
 
-          {/* Quick actions */}
-          {cv && (
-            <Link
-              to="/ai-analysis"
-              state={{
-                cvId: id,
-                cvData: cv.content,
-                cvName: cv.title,
-                originalFileUrl: cv.originalFileUrl,
-              }}
-              className="block w-full text-center px-4 py-2.5 bg-primary/10 text-primary text-sm font-medium rounded-lg hover:bg-primary/20 transition-colors"
-            >
-              View Full Analysis →
-            </Link>
+              <div className="flex justify-center mb-5">
+                <ScoreRing score={analysis.score ?? 0} />
+              </div>
+
+              {analysis.summaryEvaluation && (
+                <div className="mb-5">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-primary mb-2">
+                    Summary
+                  </h4>
+                  <p className="text-sm text-on-surface-variant leading-relaxed">
+                    {analysis.summaryEvaluation}
+                  </p>
+                </div>
+              )}
+
+              {analysis.matchedSkills && analysis.matchedSkills.length > 0 && (
+                <div className="mb-5">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-primary mb-2">
+                    Matched Skills
+                  </h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {analysis.matchedSkills.map((skill, i) => (
+                      <span
+                        key={i}
+                        className="px-2 py-0.5 bg-green-600/10 text-green-700 text-xs rounded font-medium"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {analysis.missingSkills && analysis.missingSkills.length > 0 && (
+                <div className="mb-5">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-primary mb-2">
+                    Missing Skills
+                  </h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {analysis.missingSkills.map((skill, i) => (
+                      <span
+                        key={i}
+                        className="px-2 py-0.5 bg-error/10 text-error text-xs rounded font-medium"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {analysis.improvements && analysis.improvements.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-primary mb-2">
+                    Improvements
+                  </h4>
+                  <ul className="space-y-1.5">
+                    {analysis.improvements.map((imp, i) => (
+                      <li
+                        key={i}
+                        className="text-sm text-on-surface-variant flex items-start gap-2"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+                        {imp}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>

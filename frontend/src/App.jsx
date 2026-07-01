@@ -18,6 +18,7 @@ import { ProtectedRoute } from './auth/ProtectedRoute'
 import OAuth2CallbackPage from './pages/OAuth2Callback/OAuth2CallbackPage'
 import CVUploadPage from './pages/CVUpload/CVUploadPage'
 import VnPayCallback from './pages/Billing/VnPayCallback'
+import AlAnalysisCV from "./pages/AIAnalysis/AIAnalysisCV";
 
 function App() {
   return (
@@ -40,15 +41,19 @@ function App() {
           <Route path="/cv/editor/:id" element={<CVEditorPage />} />
           <Route path="/cv/upload" element={<CVUploadPage />} />
           <Route path="/cv/:id" element={<CVDetailPage />} />
-          <Route path="/interviews/cv/:cvId" element={<InterviewQuestionsPage />} />
+          <Route
+            path="/interviews/cv/:cvId"
+            element={<InterviewQuestionsPage />}
+          />
           <Route path="/ai-analysis" element={<AIAnalysisPage />} />
+          <Route path="/ai-analysis/:id" element={<AlAnalysisCV />} />
           <Route path="/billing" element={<BillingPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/settings/password" element={<ChangePasswordPage />} />
         </Route>
       </Route>
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;
