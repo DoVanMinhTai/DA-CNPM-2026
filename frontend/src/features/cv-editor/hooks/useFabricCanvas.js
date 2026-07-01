@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { fabric } from "fabric";
+import { fontOptions } from "../utils/editorConstants";
 
 export default function useFabricCanvas({ 
   canvasWidth, canvasHeight, zoom, currentPage, setCurrentPage, initialPageEdits, 
@@ -7,7 +8,7 @@ export default function useFabricCanvas({
 }) {
   const [activeTool, setActiveTool] = useState("select");
   const [selectedElement, setSelectedElement] = useState(null);
-  const [selectedFont, setSelectedFont] = useState("Inter");
+  const [selectedFont, setSelectedFont] = useState(fontOptions[0]);
   const [fontSize, setFontSize] = useState(12);
   const [isBold, setIsBold] = useState(true);
   const [isItalic, setIsItalic] = useState(false);
@@ -193,7 +194,7 @@ export default function useFabricCanvas({
       if (!target) return;
       setSelectedElement(target);
       if (target.type === "i-text" || target.type === "textbox") {
-        setSelectedFont(target.fontFamily || "Inter");
+        setSelectedFont(target.fontFamily || fontOptions[0]);
         setFontSize(target.fontSize || 16);
         setIsBold(target.fontWeight === "bold");
         setIsItalic(target.fontStyle === "italic");
@@ -223,15 +224,7 @@ export default function useFabricCanvas({
     };
   }, []);
 
-  // Update Fabric canvas dimensions state change
-  useEffect(() => {
-    const fCanvas = fabricCanvasInstanceRef.current;
-    if (fCanvas) {
-      fCanvas.setWidth(canvasWidth);
-      fCanvas.setHeight(canvasHeight);
-      fCanvas.renderAll();
-    }
-  }, [canvasWidth, canvasHeight]);
+  // Canvas dimensions are now synchronized within the zoom effect below.
 
   // Sync Properties to Active Object
   useEffect(() => {
@@ -476,14 +469,16 @@ export default function useFabricCanvas({
     }
   }, [currentPage]);
 
-  // Zoom changes
+  // Zoom and Dimensions changes
   useEffect(() => {
     const fCanvas = fabricCanvasInstanceRef.current;
     if (fCanvas) {
+      fCanvas.setWidth(canvasWidth);
+      fCanvas.setHeight(canvasHeight);
       fCanvas.setZoom(zoom / 100);
       fCanvas.renderAll();
     }
-  }, [zoom]);
+  }, [zoom, canvasWidth, canvasHeight]);
 
   const handlePageChange = (newPageNum) => {
     const fCanvas = fabricCanvasInstanceRef.current;
@@ -508,12 +503,18 @@ export default function useFabricCanvas({
         height: 80,
         opacity: opacity / 100,
       });
-    } else {
+    } else if (type === "circle") {
       shape = new fabric.Circle({
         left: 100,
         top: 100,
         fill: activeColor,
         radius: 40,
+        opacity: opacity / 100,
+      });
+    } else if (type === "line") {
+      shape = new fabric.Line([50, 100, 250, 100], {
+        stroke: activeColor,
+        strokeWidth: 4,
         opacity: opacity / 100,
       });
     }

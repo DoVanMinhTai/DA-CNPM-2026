@@ -24,6 +24,15 @@ export default function usePdfRenderer(id, stateCvId, stateCvData, stateOriginal
   const pdfCanvasRef = useRef(null);
   const pdfDocRef = useRef(null);
   const renderTaskRef = useRef(null);
+  const prevBlobUrlRef = useRef(null);
+
+  const setOriginalFileUrlStateSafe = (newUrl) => {
+    if (prevBlobUrlRef.current && prevBlobUrlRef.current.startsWith("blob:")) {
+      URL.revokeObjectURL(prevBlobUrlRef.current);
+    }
+    prevBlobUrlRef.current = newUrl;
+    setOriginalFileUrlState(newUrl);
+  };
 
   const [canvasWidth, setCanvasWidth] = useState(794);
   const [canvasHeight, setCanvasHeight] = useState(1123);
@@ -172,7 +181,7 @@ export default function usePdfRenderer(id, stateCvId, stateCvData, stateOriginal
       const pdfBytes = await pdfDoc.save();
       
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
-      setOriginalFileUrlState(URL.createObjectURL(blob));
+      setOriginalFileUrlStateSafe(URL.createObjectURL(blob));
       setCurrentPage(Math.max(1, numPages) + 1);
     } catch(err) {
       console.error(err);
@@ -194,7 +203,7 @@ export default function usePdfRenderer(id, stateCvId, stateCvData, stateOriginal
       const pdfBytes = await pdfDoc.save();
       
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
-      setOriginalFileUrlState(URL.createObjectURL(blob));
+      setOriginalFileUrlStateSafe(URL.createObjectURL(blob));
       if (currentPage >= pageNum && currentPage > 1) {
         setCurrentPage(prev => prev - 1);
       }
@@ -224,7 +233,7 @@ export default function usePdfRenderer(id, stateCvId, stateCvData, stateOriginal
       
       const pdfBytes = await newPdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
-      setOriginalFileUrlState(URL.createObjectURL(blob));
+      setOriginalFileUrlStateSafe(URL.createObjectURL(blob));
       
       if (currentPage === fromPage) {
           setCurrentPage(toPage);
@@ -246,7 +255,7 @@ export default function usePdfRenderer(id, stateCvId, stateCvData, stateOriginal
       const viewport = page.getViewport({ scale: currentZoom / 100 });
       const textContent = await page.getTextContent();
 
-      const rawItems = textContent.items.map((item) => {
+      const rawItems = textContent.items.map((item, index) => {
         const tx = item.transform[4];
         const ty = item.transform[5];
         // Calculate font size in original PDF points
@@ -261,7 +270,7 @@ export default function usePdfRenderer(id, stateCvId, stateCvData, stateOriginal
         
         // In PDF.js, the y coordinate is the baseline. We offset it to get the top-left corner.
         return {
-          id: `text-${pageNum}-${Math.random().toString(36).substring(2, 9)}`,
+          id: `text-p${pageNum}-i${index}`,
           text: item.str,
           left: x - scaledFontSize * 0.05, // Chỉnh nhẹ x để khớp lề
           top: y - scaledFontSize * 1.05, // Cân bằng lại trục y

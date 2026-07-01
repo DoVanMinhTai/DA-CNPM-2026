@@ -177,9 +177,9 @@ export default function LoginPage() {
             <div>
               <div className="flex justify-between items-center mb-1.5">
                 <label htmlFor="login-password" className="block text-sm font-medium text-on-surface-variant">Mật khẩu</label>
-                <a href="#" className="text-sm font-medium text-primary hover:text-primary-dark transition-colors">
+                <Link to="/forgot-password" className="text-sm font-medium text-primary hover:text-primary-dark transition-colors">
                   Quên mật khẩu?
-                </a>
+                </Link>
               </div>
               <div className="relative">
                 <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" />

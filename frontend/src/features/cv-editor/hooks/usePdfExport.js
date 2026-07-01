@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
+import * as pdfjs from "pdfjs-dist";
 import { cvApi } from "../../../api/cvApi";
 
 export default function usePdfExport({
@@ -223,6 +225,14 @@ export default function usePdfExport({
             color: parseColor(obj.fill),
             opacity: obj.opacity || 1,
           });
+        } else if (obj.type === "line") {
+          page.drawLine({
+            start: { x: pdfX, y: pdfY + normHeight },
+            end: { x: pdfX + normWidth, y: pdfY },
+            thickness: (obj.strokeWidth || 1) / scaleFactor,
+            color: parseColor(obj.stroke || obj.fill),
+            opacity: obj.opacity || 1,
+          });
         }
       }
     }
@@ -266,15 +276,17 @@ export default function usePdfExport({
       }
       
       setSaveStatus("Saved just now");
+      toast.success("Đã lưu phiên bản CV mới.");
       if (response && response.cvId) {
         if (navigate) {
           navigate(`/cv/editor/${response.cvId}`, {
-            state: {
-              cvData: response.content,
-              cvId: response.cvId,
-              originalFileUrl: response.originalFileUrl,
-              cvName: response.title
-            }
+            state: { 
+              cvData: dataToSave, 
+              cvId: response.cvId, 
+              originalFileUrl: originalFileUrlState, 
+              cvName: cvNameState 
+            },
+            replace: true
           });
         }
         return response;
@@ -282,6 +294,7 @@ export default function usePdfExport({
     } catch (err) {
       console.error("Failed to save CV version:", err);
       setSaveStatus("Failed to save");
+      toast.error("Lỗi khi lưu CV.");
       throw err;
     } finally {
       setSavingVersion(false);
@@ -290,6 +303,7 @@ export default function usePdfExport({
 
   const handleExportPdf = async () => {
     try {
+      setSaving(true);
       const pdfBytes = await generateEditedPdfBytes();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
       const link = document.createElement("a");
@@ -297,9 +311,12 @@ export default function usePdfExport({
       const baseName = cvNameState ? cvNameState.replace(/\.[^/.]+$/, "") : "Untitled CV";
       link.download = `${baseName}.pdf`;
       link.click();
+      toast.success("Xuất PDF thành công.");
     } catch (err) {
       console.error("Export error: ", err);
-      alert("Lỗi xuất PDF: " + (err.message || err.toString()));
+      toast.error("Lỗi xuất PDF: " + (err.message || err.toString()));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -315,15 +332,28 @@ export default function usePdfExport({
       if (items && items.length > 0) {
         const sortedItems = [...items].sort((a, b) => a.top - b.top);
         sortedItems.forEach(item => {
-          const currentText = modifiedTexts[item.id] !== undefined ? modifiedTexts[item.id] : item.text;
+          const mods = modifiedTexts[item.id];
+          const modsObj = typeof mods === "string" ? { text: mods } : (mods || {});
+          const currentText = modsObj.text !== undefined ? modsObj.text : item.text;
+          const alignMap = {
+            left: "left",
+            center: "center",
+            right: "right",
+            justify: "both"
+          };
+          const alignStr = alignMap[modsObj.textAlign || "left"] || "left";
           const textLines = currentText.split('\n');
+
           textLines.forEach(line => {
             children.push(
               new Paragraph({
+                alignment: alignStr,
                 children: [
                   new TextRun({
                     text: line,
-                    size: (item.fontSize || 16) * 2, // docx uses half-points
+                    bold: modsObj.isBold !== undefined ? modsObj.isBold : (item.fontFamily && item.fontFamily.toLowerCase().includes("bold")),
+                    italics: modsObj.isItalic || false,
+                    size: (modsObj.fontSize || item.fontSize || 16) * 2, // docx uses half-points
                   }),
                 ],
               })
@@ -342,9 +372,18 @@ export default function usePdfExport({
         sortedObjects.forEach(obj => {
           if ((obj.type === "i-text" || obj.type === "textbox" || obj.type === "text") && obj.text) {
             const textLines = obj.text.split('\n');
+            const alignMap = {
+              left: "left",
+              center: "center",
+              right: "right",
+              justify: "both"
+            };
+            const alignStr = alignMap[obj.textAlign || "left"] || "left";
+
             textLines.forEach(line => {
               children.push(
                 new Paragraph({
+                  alignment: alignStr,
                   children: [
                     new TextRun({
                       text: line,
@@ -379,50 +418,57 @@ export default function usePdfExport({
 
   const handleExportWord = async () => {
     try {
+      setSaving(true);
       const blob = await generateWordBlob();
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
       const baseName = cvNameState ? cvNameState.replace(/\.[^/.]+$/, "") : "Untitled CV";
       link.download = `${baseName}.docx`;
       link.click();
+      toast.success("Xuất Word thành công.");
     } catch (err) {
       console.error("Export Word error: ", err);
+      toast.error("Lỗi xuất Word: " + (err.message || err.toString()));
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleExportImage = async () => {
     try {
-      if (!pdfCanvasRef || !pdfCanvasRef.current) return;
-      if (!fabricCanvasInstanceRef || !fabricCanvasInstanceRef.current) return;
-
-      const pdfCanvas = pdfCanvasRef.current;
-      const fabricCanvas = fabricCanvasInstanceRef.current;
-
-      const mergedCanvas = document.createElement("canvas");
-      mergedCanvas.width = pdfCanvas.width;
-      mergedCanvas.height = pdfCanvas.height;
-      const ctx = mergedCanvas.getContext("2d");
-
-      ctx.drawImage(pdfCanvas, 0, 0);
-
-      // Safe export of fabric canvas
-      const fabricDataUrl = fabricCanvas.toDataURL({ format: "png", quality: 1, multiplier: 1 });
-      const img = new Image();
-      img.src = fabricDataUrl;
-      await new Promise(resolve => {
-        img.onload = resolve;
-        img.onerror = resolve; // Continue even if image load fails
-      });
-      ctx.drawImage(img, 0, 0, pdfCanvas.width, pdfCanvas.height);
-
-      const dataUrl = mergedCanvas.toDataURL("image/png");
-      const link = document.createElement("a");
-      link.href = dataUrl;
+      setSaving(true);
+      await saveCurrentPageEdits();
+      const pdfBytes = await generateEditedPdfBytes();
+      
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const pdfDoc = await pdfjs.getDocument(url).promise;
       const baseName = cvNameState ? cvNameState.replace(/\.[^/.]+$/, "") : "Untitled CV";
-      link.download = `${baseName}_page_${currentPage || 1}.png`;
-      link.click();
+
+      for (let i = 1; i <= pdfDoc.numPages; i++) {
+        const page = await pdfDoc.getPage(i);
+        const viewport = page.getViewport({ scale: 2 }); // High quality for export
+        const canvas = document.createElement("canvas");
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext("2d");
+        
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        
+        const dataUrl = canvas.toDataURL("image/png");
+        const link = document.createElement("a");
+        link.href = dataUrl;
+        link.download = `${baseName}_page_${i}.png`;
+        link.click();
+      }
+      
+      URL.revokeObjectURL(url);
+      toast.success("Xuất ảnh thành công.");
     } catch (err) {
       console.error("Export Image error:", err);
+      toast.error("Lỗi xuất Image: " + (err.message || err.toString()));
+    } finally {
+      setSaving(false);
     }
   };
 

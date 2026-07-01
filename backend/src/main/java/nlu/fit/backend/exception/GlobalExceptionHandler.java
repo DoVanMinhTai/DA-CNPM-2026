@@ -8,10 +8,12 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -45,10 +47,7 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage(), null);
     }
 
-    @ExceptionHandler(AccountLinkingRequiredException.class)
-    public ResponseEntity<ApiErrorResponse> handleAccountLinkingRequiredException(AccountLinkingRequiredException ex) {
-        return buildErrorResponse(HttpStatus.CONFLICT, "Account Linking Required", ex.getMessage(), null);
-    }
+
 
     @ExceptionHandler(InsufficientCreditsException.class)
     public ResponseEntity<ApiErrorResponse> handleInsufficientCreditsException(InsufficientCreditsException ex) {
@@ -71,9 +70,15 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "Bad Request", "Validation failed", errors);
     }
 
+    @ExceptionHandler(org.springframework.web.bind.MissingRequestCookieException.class)
+    public ResponseEntity<ApiErrorResponse> handleMissingRequestCookieException(org.springframework.web.bind.MissingRequestCookieException ex) {
+        log.error("Missing Request Cookie Exception: {}", ex.getMessage());
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Missing Cookie", ex.getMessage(), null);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleAllUncaughtExceptions(Exception ex) {
-        // Log the exception in real production
+        log.error("Unhandled Exception: ", ex);
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", ex.getMessage(), null);
     }
 

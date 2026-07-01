@@ -6,7 +6,6 @@ import nlu.fit.backend.entity.LinkedAccount;
 import nlu.fit.backend.entity.User;
 import nlu.fit.backend.entity.enums.AuthProvider;
 import nlu.fit.backend.entity.enums.Role;
-import nlu.fit.backend.exception.AccountLinkingRequiredException;
 import nlu.fit.backend.exception.OAuth2AuthenticationProcessingException;
 import nlu.fit.backend.repository.LinkedAccountRepository;
 import nlu.fit.backend.repository.UserRepository;
@@ -71,16 +70,23 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             // Check if email already exists in DB
             Optional<User> userOpt = userRepository.findByEmail(oAuth2UserInfo.getEmail());
             if (userOpt.isPresent()) {
-                // Email collision! Require password-based account linking
-                log.info("Email collision detected for {}. Requiring manual account linking.", oAuth2UserInfo.getEmail());
-                throw new AccountLinkingRequiredException(
-                        "An account with this email already exists. Please confirm to link your account.",
-                        provider.name(),
-                        oAuth2UserInfo.getId(),
-                        oAuth2UserInfo.getEmail(),
-                        oAuth2UserInfo.getName(),
-                        oAuth2UserInfo.getAvatarUrl()
-                );
+                // Tự động liên kết tài khoản OAuth2 mới vào tài khoản có sẵn
+                user = userOpt.get();
+                if (!user.isEnabled()) {
+                    throw new OAuth2AuthenticationProcessingException("User account is disabled.");
+                }
+                
+                LinkedAccount newLink = LinkedAccount.builder()
+                        .user(user)
+                        .provider(provider)
+                        .providerId(oAuth2UserInfo.getId())
+                        .providerEmail(oAuth2UserInfo.getEmail())
+                        .providerName(oAuth2UserInfo.getName())
+                        .build();
+                linkedAccountRepository.save(newLink);
+                log.info("Auto-linked new OAuth2 provider {} for existing user {}", provider, user.getEmail());
+                
+                updateExistingUser(user, oAuth2UserInfo);
             } else {
                 // Register as a new user with this social account
                 user = registerNewUser(oAuth2UserRequest, oAuth2UserInfo);

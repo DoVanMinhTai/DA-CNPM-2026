@@ -1,5 +1,32 @@
-import { Grid3X3, Plus, Trash2, ChevronUp, ChevronDown, FileText } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Grid3X3, Plus, Trash2, ChevronUp, ChevronDown, FileText, Square, Circle, Minus } from "lucide-react";
 import { tools } from "../utils/editorConstants";
+
+function Thumbnail({ pdfDocRef, pageNum }) {
+  const canvasRef = useRef(null);
+  
+  useEffect(() => {
+    const renderThumb = async () => {
+      if (!pdfDocRef?.current || !canvasRef.current) return;
+      try {
+        const page = await pdfDocRef.current.getPage(pageNum);
+        // We only need a small thumbnail, so scale=0.3 is enough
+        const viewport = page.getViewport({ scale: 0.3 });
+        const canvas = canvasRef.current;
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext("2d");
+        
+        await page.render({ canvasContext: ctx, viewport }).promise;
+      } catch (err) {
+        console.error(`Error rendering thumbnail for page ${pageNum}`, err);
+      }
+    };
+    renderThumb();
+  }, [pdfDocRef, pageNum]);
+
+  return <canvas ref={canvasRef} className="w-full h-full object-cover rounded-sm" />;
+}
 
 export default function LeftSidebar({
   activeTool,
@@ -13,36 +40,67 @@ export default function LeftSidebar({
   onAddPage,
   onDeletePage,
   onMovePage,
+  pdfDocRef,
 }) {
+  const [showShapeMenu, setShowShapeMenu] = useState(false);
+
   return (
     <aside className="relative flex border-r border-outline-variant/40 bg-surface z-40 flex-shrink-0 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)]">
       {/* Column 1: Vertical Toolbar */}
-      <div className="w-12 flex flex-col items-center py-5 gap-4 border-r border-outline-variant">
+      <div className="w-12 flex flex-col items-center py-5 gap-4 border-r border-outline-variant relative">
         {tools.map((tool) => (
-          <button
-            key={tool.id}
-            onClick={() => {
-              if (tool.id === "shapes") {
-                onAddShape("rect");
-                onToolChange("select");
-              } else if (tool.id === "text") {
-                onAddText();
-                onToolChange("select");
-              } else if (tool.id === "image") {
-                onShowUploadModal(true);
-              } else {
-                onToolChange(tool.id);
-              }
-            }}
-            className={`p-2 rounded-xl transition-all ${
-              activeTool === tool.id
-                ? "text-white bg-primary shadow-sm"
-                : "text-on-surface-variant hover:bg-surface-container-high"
-            }`}
-            title={tool.label}
-          >
-            <tool.icon size={18} />
-          </button>
+          <div key={tool.id} className="relative">
+            <button
+              onClick={() => {
+                if (tool.id === "shapes") {
+                  setShowShapeMenu(!showShapeMenu);
+                } else {
+                  setShowShapeMenu(false);
+                  if (tool.id === "text") {
+                    onAddText();
+                    onToolChange("select");
+                  } else if (tool.id === "image") {
+                    onShowUploadModal(true);
+                  } else {
+                    onToolChange(tool.id);
+                  }
+                }
+              }}
+              className={`p-2 rounded-xl transition-all block ${
+                activeTool === tool.id
+                  ? "text-white bg-primary shadow-sm"
+                  : "text-on-surface-variant hover:bg-surface-container-high"
+              }`}
+              title={tool.label}
+            >
+              <tool.icon size={18} />
+            </button>
+            {tool.id === "shapes" && showShapeMenu && (
+              <div className="absolute left-full top-0 ml-2 bg-white border border-outline-variant/40 shadow-xl rounded-xl p-1.5 flex flex-col gap-1 z-50 animate-in fade-in slide-in-from-left-2 duration-200">
+                <button
+                  onClick={() => { onAddShape("rect"); onToolChange("select"); setShowShapeMenu(false); }}
+                  className="p-2 hover:bg-surface-container rounded-lg flex items-center justify-center text-primary transition-colors"
+                  title="Rectangle"
+                >
+                  <Square size={16} />
+                </button>
+                <button
+                  onClick={() => { onAddShape("circle"); onToolChange("select"); setShowShapeMenu(false); }}
+                  className="p-2 hover:bg-surface-container rounded-lg flex items-center justify-center text-primary transition-colors"
+                  title="Circle"
+                >
+                  <Circle size={16} />
+                </button>
+                <button
+                  onClick={() => { onAddShape("line"); onToolChange("select"); setShowShapeMenu(false); }}
+                  className="p-2 hover:bg-surface-container rounded-lg flex items-center justify-center text-primary transition-colors"
+                  title="Line"
+                >
+                  <Minus size={16} />
+                </button>
+              </div>
+            )}
+          </div>
         ))}
       </div>
 
@@ -78,10 +136,8 @@ export default function LeftSidebar({
                         : "border-outline-variant/40"
                     } transition-colors`}
                   >
-                    <div className="w-full h-full bg-surface-container rounded-sm flex flex-col items-center justify-center p-2 gap-1 text-center">
-                      <span className="text-[10px] font-bold text-primary">
-                        Page {pageNum}
-                      </span>
+                    <div className="w-full h-full bg-surface-container rounded-sm flex flex-col items-center justify-center relative overflow-hidden">
+                      <Thumbnail pdfDocRef={pdfDocRef} pageNum={pageNum} />
                     </div>
                   </div>
                   <span

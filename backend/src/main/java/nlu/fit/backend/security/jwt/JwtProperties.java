@@ -14,4 +14,5 @@ public class JwtProperties {
     private long accessTokenExpiration;
     private long refreshTokenExpiration;
     private long emailVerificationExpiration;
+    private long passwordResetExpiration;
 }
