@@ -11,6 +11,8 @@ import PricingPage from './pages/Pricing/PricingPage'
 import BillingPage from './pages/Billing/BillingPage'
 import SettingsPage from './pages/Settings/SettingsPage'
 import ChangePasswordPage from './pages/ChangePassword/ChangePasswordPage'
+import ForgotPasswordPage from './pages/ForgotPassword/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPassword/ResetPasswordPage'
 import DashboardLayout from './layouts/DashboardLayout'
 import { ProtectedRoute } from './auth/ProtectedRoute'
 import OAuth2CallbackPage from './pages/OAuth2Callback/OAuth2CallbackPage'
@@ -24,6 +26,8 @@ function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/oauth2/callback" element={<OAuth2CallbackPage />} />
       <Route path="/payment/result" element={<VnPayCallback />} />

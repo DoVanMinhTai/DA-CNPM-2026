@@ -1,3 +1,5 @@
+import { fontOptions } from '../utils/editorConstants';
+
 export default function MainCanvas({
   loading,
   error,
@@ -59,7 +61,7 @@ export default function MainCanvas({
             
             // Thuộc tính hiển thị
             const displayFontSize = modsObj.fontSize || item.fontSize;
-            const displayFontFamily = modsObj.fontFamily || item.fontFamily || "Inter, sans-serif";
+            const displayFontFamily = modsObj.fontFamily || item.fontFamily || fontOptions[0];
             let displayColor = modsObj.color || item.color || '#000000';
             
             const isOriginalBold = item.fontFamily && item.fontFamily.toLowerCase().includes("bold");
@@ -134,6 +136,7 @@ export default function MainCanvas({
                     fontFamily: displayFontFamily,
                     fontWeight: displayFontWeight,
                     fontStyle: displayFontStyle,
+                    textAlign: modsObj.textAlign || 'left',
                     color: textColor,
                     minWidth: `${item.width}px`,
                     lineHeight: 1.1,

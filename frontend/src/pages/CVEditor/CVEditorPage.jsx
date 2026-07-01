@@ -9,6 +9,8 @@ import LeftSidebar from "../../features/cv-editor/components/LeftSidebar";
 import MainCanvas from "../../features/cv-editor/components/MainCanvas";
 import RightProperties from "../../features/cv-editor/components/RightProperties";
 import ImageUploadModal from "../../features/cv-editor/components/ImageUploadModal";
+import { fontOptions } from "../../features/cv-editor/utils/editorConstants";
+import { toast } from "sonner";
 
 export default function CVEditorPage() {
   const location = useLocation();
@@ -22,8 +24,9 @@ export default function CVEditorPage() {
   } = location.state || {};
 
   const [zoom, setZoom] = useState(100);
-  const [saveStatus, setSaveStatus] = useState("Saved 2 minutes ago");
+  const [saveStatus, setSaveStatus] = useState(id ? "All changes saved" : "Unsaved changes");
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showRightPanel, setShowRightPanel] = useState(false);
   const [extractedTexts, setExtractedTexts] = useState({});
   const [modifiedTexts, setModifiedTexts] = useState({});
   const [activeTextId, setActiveTextId] = useState(null);
@@ -43,6 +46,7 @@ export default function CVEditorPage() {
     currentPage,
     setCurrentPage,
     pdfCanvasRef,
+    pdfDocRef,
     canvasWidth,
     canvasHeight,
     handleAddPage,
@@ -57,6 +61,7 @@ export default function CVEditorPage() {
     fabricCanvasInstanceRef,
     activeTool,
     setActiveTool,
+    selectedElement,
     selectedFont,
     setSelectedFont,
     fontSize,
@@ -117,6 +122,7 @@ export default function CVEditorPage() {
     currentPage,
     extractedTexts,
     modifiedTexts,
+    numPages,
   });
 
   const handleZoomIn = () => setZoom((prev) => Math.min(prev + 10, 200));
@@ -141,6 +147,9 @@ export default function CVEditorPage() {
     const allTexts = await extractTextFromAllPages(zoom);
     if (allTexts && Object.keys(allTexts).length > 0) {
       setExtractedTexts(allTexts);
+      toast.info("Đã bóc chữ. Lưu ý: Màu chữ mặc định được gán là màu đen do hạn chế trích xuất màu từ PDF.", {
+        duration: 5000,
+      });
     }
   };
 
@@ -159,7 +168,7 @@ export default function CVEditorPage() {
       if (item) {
         const mods = modifiedTexts[activeTextId];
         const modsObj = typeof mods === "string" ? { text: mods } : (mods || {});
-        setSelectedFont(modsObj.fontFamily || item.fontFamily || "Inter");
+        setSelectedFont(modsObj.fontFamily || item.fontFamily || fontOptions[0]);
         setFontSize(modsObj.fontSize || item.fontSize || 16);
         setIsBold(
           modsObj.isBold !== undefined
@@ -230,6 +239,50 @@ export default function CVEditorPage() {
     }
   };
 
+  const handleTextAlignChange = (align) => {
+    setTextAlign(align);
+    if (activeTextId) {
+      setModifiedTexts((prev) => {
+        const existing = prev[activeTextId];
+        const base = typeof existing === "string" ? { text: existing } : (existing || {});
+        return { ...prev, [activeTextId]: { ...base, textAlign: align } };
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (activeTextId || selectedElement) {
+      setShowRightPanel(true);
+    } else {
+      setShowRightPanel(false);
+    }
+  }, [activeTextId, selectedElement]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ignore if typing in an input or contenteditable
+      const tag = e.target.tagName.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        handleUndo();
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        handleRedo();
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        handleSaveWithFormat('pdf', navigate);
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        // Delete active object
+        handleDeleteElement();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleUndo, handleRedo, handleSaveWithFormat, navigate, handleDeleteElement]);
+
   return (
     <div className="flex flex-col h-screen w-full bg-surface-container-highest overflow-hidden">
       <style dangerouslySetInnerHTML={{
@@ -278,6 +331,7 @@ export default function CVEditorPage() {
           onAddPage={onAddPage}
           onDeletePage={onDeletePage}
           onMovePage={onMovePage}
+          pdfDocRef={pdfDocRef}
         />
 
         <MainCanvas
@@ -305,12 +359,14 @@ export default function CVEditorPage() {
           isItalic={isItalic}
           onItalicToggle={handleItalicToggle}
           textAlign={textAlign}
-          onTextAlignChange={setTextAlign}
+          onTextAlignChange={handleTextAlignChange}
           activeColor={activeColor}
           onColorChange={handleColorChange}
           opacity={opacity}
           onOpacityChange={setOpacity}
           onDeleteElement={handleDeleteElement}
+          isOpen={showRightPanel}
+          onClose={() => setShowRightPanel(false)}
         />
       </div>
 
