@@ -1,21 +1,22 @@
-import { Routes, Route } from 'react-router-dom'
-import HomePage from './pages/Home/HomePage'
-import LoginPage from './pages/Login/LoginPage'
-import RegisterPage from './pages/Register/RegisterPage'
-import DashboardPage from './pages/Dashboard/DashboardPage'
-import CVEditorPage from './pages/CVEditor/CVEditorPage'
-import CVDetailPage from './pages/CVDetail/CVDetailPage'
-import AIAnalysisPage from './pages/AIAnalysis/AIAnalysisPage'
-import InterviewQuestionsPage from './pages/InterviewQuestions/InterviewQuestionsPage'
-import PricingPage from './pages/Pricing/PricingPage'
-import BillingPage from './pages/Billing/BillingPage'
-import SettingsPage from './pages/Settings/SettingsPage'
-import ChangePasswordPage from './pages/ChangePassword/ChangePasswordPage'
-import DashboardLayout from './layouts/DashboardLayout'
-import { ProtectedRoute } from './auth/ProtectedRoute'
-import OAuth2CallbackPage from './pages/OAuth2Callback/OAuth2CallbackPage'
-import CVUploadPage from './pages/CVUpload/CVUploadPage'
-import VnPayCallback from './pages/Billing/VnPayCallback'
+import { Routes, Route } from "react-router-dom";
+import HomePage from "./pages/Home/HomePage";
+import LoginPage from "./pages/Login/LoginPage";
+import RegisterPage from "./pages/Register/RegisterPage";
+import DashboardPage from "./pages/Dashboard/DashboardPage";
+import CVEditorPage from "./pages/CVEditor/CVEditorPage";
+import CVDetailPage from "./pages/CVDetail/CVDetailPage";
+import AIAnalysisPage from "./pages/AIAnalysis/AIAnalysisPage";
+import InterviewQuestionsPage from "./pages/InterviewQuestions/InterviewQuestionsPage";
+import PricingPage from "./pages/Pricing/PricingPage";
+import BillingPage from "./pages/Billing/BillingPage";
+import SettingsPage from "./pages/Settings/SettingsPage";
+import ChangePasswordPage from "./pages/ChangePassword/ChangePasswordPage";
+import DashboardLayout from "./layouts/DashboardLayout";
+import { ProtectedRoute } from "./auth/ProtectedRoute";
+import OAuth2CallbackPage from "./pages/OAuth2Callback/OAuth2CallbackPage";
+import CVUploadPage from "./pages/CVUpload/CVUploadPage";
+import VnPayCallback from "./pages/Billing/VnPayCallback";
+import AlAnalysisCV from "./pages/AIAnalysis/AIAnalysisCV";
 
 function App() {
   return (
@@ -36,15 +37,19 @@ function App() {
           <Route path="/cv/editor/:id" element={<CVEditorPage />} />
           <Route path="/cv/upload" element={<CVUploadPage />} />
           <Route path="/cv/:id" element={<CVDetailPage />} />
-          <Route path="/interviews/cv/:cvId" element={<InterviewQuestionsPage />} />
+          <Route
+            path="/interviews/cv/:cvId"
+            element={<InterviewQuestionsPage />}
+          />
           <Route path="/ai-analysis" element={<AIAnalysisPage />} />
+          <Route path="/ai-analysis/:id" element={<AlAnalysisCV />} />
           <Route path="/billing" element={<BillingPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/settings/password" element={<ChangePasswordPage />} />
         </Route>
       </Route>
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;
