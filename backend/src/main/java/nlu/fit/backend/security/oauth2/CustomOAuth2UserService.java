@@ -11,6 +11,7 @@ import nlu.fit.backend.exception.OAuth2AuthenticationProcessingException;
 import nlu.fit.backend.repository.LinkedAccountRepository;
 import nlu.fit.backend.repository.UserRepository;
 import nlu.fit.backend.security.UserPrincipal;
+import nlu.fit.backend.service.SubscriptionService;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -28,6 +29,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
     private final LinkedAccountRepository linkedAccountRepository;
+    private final SubscriptionService subscriptionService;
 
     @Override
     @Transactional
@@ -102,6 +104,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .build();
 
         user = userRepository.save(user);
+
+        try {
+            subscriptionService.initSubscription(user);
+            log.info("Initialized subscription for OAuth2 user: {}", user.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to initialize subscription for user: {}", user.getEmail(), e);
+            throw new OAuth2AuthenticationProcessingException("Could not setup user subscription profile");
+        }
 
         LinkedAccount linkedAccount = LinkedAccount.builder()
                 .user(user)
