@@ -58,12 +58,12 @@ spring:
             scope:
             - email
             - profile
-        facebook:
-          client-id: ${FACEBOOK_CLIENT_ID}
-          client-secret: ${FACEBOOK_CLIENT_SECRET}
-          scope:
-            - email
-            - public_profile
+          facebook:
+            client-id: ${FACEBOOK_CLIENT_ID}
+            client-secret: ${FACEBOOK_CLIENT_SECRET}
+            scope:
+              - email
+              - public_profile
 
 # JWT Config
 jwt:
@@ -71,6 +71,7 @@ jwt:
   access-token-expiration: 600000      # 10 minutes (ms)
   refresh-token-expiration: 604800000  # 7 days (ms)
   email-verification-expiration: 86400000  # 24 hours (ms)
+  password-reset-expiration: 900000    # 15 minutes (ms)
 
   servlet:
     multipart:

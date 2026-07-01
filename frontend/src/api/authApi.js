@@ -44,10 +44,5 @@ export const authApi = {
     return data; // { message }
   },
 
-  // Xác nhận liên kết tài khoản OAuth (Google/Facebook) với tài khoản local hiện tại
-  confirmLink: async (linkData) => {
-    const { data } = await axiosInstance.post('/api/auth/confirm-link', linkData);
-    setAccessToken(data.accessToken);
-    return data; // { accessToken, user }
-  },
+
 };

@@ -1,9 +1,6 @@
 package nlu.fit.backend.service;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nlu.fit.backend.exception.InvalidTokenException;
@@ -11,11 +8,7 @@ import nlu.fit.backend.security.jwt.JwtProperties;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Set;
 import java.util.UUID;
@@ -29,16 +22,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final JwtProperties jwtProperties;
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class RefreshTokenInfo implements Serializable {
-        private String token;
-        private UUID userId;
-        private LocalDateTime createdAt;
-        private LocalDateTime expiresAt;
-    }
+
 
     private String buildRedisKey(UUID userId, String tokenId) {
         return "rt:" + userId.toString() + ":" + tokenId;
@@ -53,20 +37,10 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         String tokenId = UUID.randomUUID().toString();
         String publicToken = encodeToken(userId, tokenId);
 
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiresAt = LocalDateTime.now().plus(Duration.ofMillis(jwtProperties.getRefreshTokenExpiration()));
-
-        RefreshTokenInfo tokenInfo = RefreshTokenInfo.builder()
-                .token(publicToken)
-                .userId(userId)
-                .createdAt(now)
-                .expiresAt(expiresAt)
-                .build();
-
         String redisKey = buildRedisKey(userId, tokenId);
         redisTemplate.opsForValue().set(
                 redisKey,
-                tokenInfo,
+                userId.toString(),
                 jwtProperties.getRefreshTokenExpiration(),
                 TimeUnit.MILLISECONDS
         );
@@ -74,22 +48,23 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         return publicToken;
     }
 
-    /**
-     * Decode public token, lookup in Redis, and return userId.
-     */
     @Override
     public UUID validateRefreshToken(String publicToken) {
         try {
+            log.info("Validating refresh token: {}", publicToken);
             DecodedToken decoded = decodeToken(publicToken);
             String redisKey = buildRedisKey(decoded.userId, decoded.tokenId);
+            log.info("Redis key: {}", redisKey);
             
-            RefreshTokenInfo tokenInfo = (RefreshTokenInfo) redisTemplate.opsForValue().get(redisKey);
-            if (tokenInfo == null) {
+            Object userIdStr = redisTemplate.opsForValue().get(redisKey);
+            if (userIdStr == null) {
+                log.warn("Token info is null in Redis for key: {}", redisKey);
                 throw new InvalidTokenException("Refresh token is invalid or has expired");
             }
-            return tokenInfo.getUserId();
+            log.info("Token valid for user: {}", userIdStr);
+            return UUID.fromString(userIdStr.toString());
         } catch (Exception ex) {
-            log.error("Refresh token validation failed", ex);
+            log.error("Refresh token validation failed with Exception: ", ex);
             throw new InvalidTokenException("Refresh token is invalid or has expired");
         }
     }
@@ -102,7 +77,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         DecodedToken decoded = decodeToken(oldPublicToken);
         String redisKey = buildRedisKey(decoded.userId, decoded.tokenId);
 
-        RefreshTokenInfo tokenInfo = (RefreshTokenInfo) redisTemplate.opsForValue().get(redisKey);
+        Object tokenInfo = redisTemplate.opsForValue().get(redisKey);
         if (tokenInfo == null) {
             // Token does not exist - possible theft attempt. Revoke all user tokens!
             log.warn("Attempted reuse of refresh token by user: {}. Revoking all user tokens.", decoded.userId);

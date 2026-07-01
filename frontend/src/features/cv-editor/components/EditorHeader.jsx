@@ -11,6 +11,7 @@ import {
   Image,
   CheckCircle,
   X,
+  Loader2,
 } from "lucide-react";
 import SaveDialogModal from "./SaveDialogModal";
 
@@ -26,6 +27,7 @@ export default function EditorHeader({
   onExportPdf,
   onExportWord,
   onExportImage,
+  saving,
   savingVersion,
   saveStatus,
   onUndo,
@@ -200,10 +202,21 @@ export default function EditorHeader({
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsExportOpen(!isExportOpen)}
-              className="flex items-center gap-2 px-3 py-2 bg-primary text-white rounded-xl font-bold text-xs hover:bg-primary-dark transition-all shadow-sm"
+              disabled={saving}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl font-bold text-xs transition-all shadow-sm ${
+                saving ? "bg-surface-variant text-on-surface-variant cursor-not-allowed" : "bg-primary text-white hover:bg-primary-dark"
+              }`}
             >
-              Export
-              <ChevronDown size={14} className={`transition-transform duration-200 ${isExportOpen ? "rotate-180" : ""}`} />
+              {saving ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" /> Exporting...
+                </>
+              ) : (
+                <>
+                  Export
+                  <ChevronDown size={14} className={`transition-transform duration-200 ${isExportOpen ? "rotate-180" : ""}`} />
+                </>
+              )}
             </button>
             {/* Export Dropdown */}
             {isExportOpen && (
@@ -225,6 +238,15 @@ export default function EditorHeader({
                   className="w-full px-4 py-2 hover:bg-surface-container flex items-center gap-2.5 text-xs text-left transition-colors"
                 >
                   <Download size={14} className="text-primary" /> Word
+                </button>
+                <button
+                  onClick={() => {
+                    setIsExportOpen(false);
+                    if (onExportImage) onExportImage();
+                  }}
+                  className="w-full px-4 py-2 hover:bg-surface-container flex items-center gap-2.5 text-xs text-left transition-colors border-t border-outline-variant/20"
+                >
+                  <Image size={14} className="text-primary" /> Image (All Pages)
                 </button>
               </div>
             )}

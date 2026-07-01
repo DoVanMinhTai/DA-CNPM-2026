@@ -7,6 +7,7 @@ import {
   AlignRight,
   Trash2,
   Plus,
+  X,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { fontOptions, colorSwatches } from "../utils/editorConstants";
@@ -27,6 +28,8 @@ export default function RightProperties({
   opacity,
   onOpacityChange,
   onDeleteElement,
+  isOpen,
+  onClose,
 }) {
   const [customColors, setCustomColors] = useState([]);
   const [newColorInput, setNewColorInput] = useState("");
@@ -56,12 +59,29 @@ export default function RightProperties({
     }
   };
   return (
-    <aside className="relative hidden lg:flex w-60 xl:w-64 border-l border-outline-variant/40 bg-surface z-40 flex-col flex-shrink-0 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]">
-      <div className="p-5 border-b border-outline-variant flex-1 overflow-y-auto">
-        <h3 className="font-bold text-sm text-primary mb-5">
-          Text Properties
-        </h3>
-        <div className="space-y-5">
+    <>
+      {/* Overlay for mobile */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={onClose}
+        />
+      )}
+      
+      <aside className={`fixed lg:relative top-0 right-0 h-full w-64 lg:w-60 xl:w-64 border-l border-outline-variant/40 bg-surface z-50 lg:z-40 flex-col flex-shrink-0 shadow-xl lg:shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"} flex`}>
+        <div className="p-5 border-b border-outline-variant flex items-center justify-between">
+          <h3 className="font-bold text-sm text-primary">
+            Text Properties
+          </h3>
+          <button 
+            className="lg:hidden text-on-surface-variant hover:text-primary transition-colors p-1"
+            onClick={onClose}
+          >
+            <X size={20} />
+          </button>
+        </div>
+        <div className="p-5 flex-1 overflow-y-auto">
+          <div className="space-y-5">
           {/* Font Family */}
           <div>
             <label className="text-[10px] font-bold uppercase tracking-wider text-outline mb-2 block">
@@ -216,5 +236,6 @@ export default function RightProperties({
         </button>
       </div>
     </aside>
+    </>
   );
 }

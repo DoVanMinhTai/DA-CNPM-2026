@@ -1,21 +1,23 @@
-import { Routes, Route } from "react-router-dom";
-import HomePage from "./pages/Home/HomePage";
-import LoginPage from "./pages/Login/LoginPage";
-import RegisterPage from "./pages/Register/RegisterPage";
-import DashboardPage from "./pages/Dashboard/DashboardPage";
-import CVEditorPage from "./pages/CVEditor/CVEditorPage";
-import CVDetailPage from "./pages/CVDetail/CVDetailPage";
-import AIAnalysisPage from "./pages/AIAnalysis/AIAnalysisPage";
-import InterviewQuestionsPage from "./pages/InterviewQuestions/InterviewQuestionsPage";
-import PricingPage from "./pages/Pricing/PricingPage";
-import BillingPage from "./pages/Billing/BillingPage";
-import SettingsPage from "./pages/Settings/SettingsPage";
-import ChangePasswordPage from "./pages/ChangePassword/ChangePasswordPage";
-import DashboardLayout from "./layouts/DashboardLayout";
-import { ProtectedRoute } from "./auth/ProtectedRoute";
-import OAuth2CallbackPage from "./pages/OAuth2Callback/OAuth2CallbackPage";
-import CVUploadPage from "./pages/CVUpload/CVUploadPage";
-import VnPayCallback from "./pages/Billing/VnPayCallback";
+import { Routes, Route } from 'react-router-dom'
+import HomePage from './pages/Home/HomePage'
+import LoginPage from './pages/Login/LoginPage'
+import RegisterPage from './pages/Register/RegisterPage'
+import DashboardPage from './pages/Dashboard/DashboardPage'
+import CVEditorPage from './pages/CVEditor/CVEditorPage'
+import CVDetailPage from './pages/CVDetail/CVDetailPage'
+import AIAnalysisPage from './pages/AIAnalysis/AIAnalysisPage'
+import InterviewQuestionsPage from './pages/InterviewQuestions/InterviewQuestionsPage'
+import PricingPage from './pages/Pricing/PricingPage'
+import BillingPage from './pages/Billing/BillingPage'
+import SettingsPage from './pages/Settings/SettingsPage'
+import ChangePasswordPage from './pages/ChangePassword/ChangePasswordPage'
+import ForgotPasswordPage from './pages/ForgotPassword/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPassword/ResetPasswordPage'
+import DashboardLayout from './layouts/DashboardLayout'
+import { ProtectedRoute } from './auth/ProtectedRoute'
+import OAuth2CallbackPage from './pages/OAuth2Callback/OAuth2CallbackPage'
+import CVUploadPage from './pages/CVUpload/CVUploadPage'
+import VnPayCallback from './pages/Billing/VnPayCallback'
 import AlAnalysisCV from "./pages/AIAnalysis/AIAnalysisCV";
 
 function App() {
@@ -25,6 +27,8 @@ function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/oauth2/callback" element={<OAuth2CallbackPage />} />
       <Route path="/payment/result" element={<VnPayCallback />} />

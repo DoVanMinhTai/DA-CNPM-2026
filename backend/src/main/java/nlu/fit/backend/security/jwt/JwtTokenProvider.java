@@ -55,6 +55,18 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    public String generatePasswordResetToken(String email) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + jwtProperties.getPasswordResetExpiration());
+
+        return Jwts.builder()
+                .subject(email)
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(getSigningKey(), Jwts.SIG.HS256)
+                .compact();
+    }
+
     public boolean validateToken(String token) {
         try {
             Jwts.parser()

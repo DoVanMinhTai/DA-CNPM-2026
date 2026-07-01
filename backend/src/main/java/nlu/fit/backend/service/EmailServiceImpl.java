@@ -79,4 +79,48 @@ public class EmailServiceImpl implements EmailService {
             log.warn("====================================");
         }
     }
+
+    @Override
+    public void sendPasswordResetEmail(String email, String fullName, String resetUrl) {
+        log.info("Generating password reset email for {}. URL: {}", email, resetUrl);
+
+        if (mailUsername == null || mailUsername.trim().isEmpty()) {
+            log.warn("=== EMAIL SMTP IS NOT CONFIGUERD ===");
+            log.warn("To reset password for user '{}' ({}), open this URL in your browser:", fullName, email);
+            log.warn("URL: {}", resetUrl);
+            log.warn("====================================");
+            return;
+        }
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(
+                    message, 
+                    MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED, 
+                    StandardCharsets.UTF_8.name()
+            );
+
+            helper.setTo(email);
+            helper.setSubject("CareerAI - Đặt lại mật khẩu");
+            helper.setFrom(mailUsername);
+
+            String htmlContent = String.format(
+                    "<html><body>" +
+                    "<h2>Xin chào %s,</h2>" +
+                    "<p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản CareerAI của bạn.</p>" +
+                    "<p>Vui lòng nhấn vào liên kết bên dưới để tạo mật khẩu mới (Liên kết có hiệu lực trong 15 phút):</p>" +
+                    "<p><a href='%s' style='display:inline-block;background-color:#4F46E5;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;'>Đặt lại mật khẩu</a></p>" +
+                    "<p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>" +
+                    "<br><p>Trân trọng,<br>Đội ngũ CareerAI</p>" +
+                    "</body></html>",
+                    fullName, resetUrl
+            );
+
+            helper.setText(htmlContent, true); // true indicates HTML content
+            mailSender.send(message);
+            log.info("Password reset email sent successfully to: {}", email);
+        } catch (Exception e) {
+            log.error("Failed to send password reset email to: {}", email, e);
+        }
+    }
 }

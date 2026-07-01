@@ -4,9 +4,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import nlu.fit.backend.dto.request.ConfirmLinkRequest;
+import nlu.fit.backend.dto.request.ForgotPasswordRequest;
 import nlu.fit.backend.dto.request.LoginRequest;
 import nlu.fit.backend.dto.request.RegisterRequest;
+import nlu.fit.backend.dto.request.ResetPasswordRequest;
 import nlu.fit.backend.dto.response.AuthResponse;
 import nlu.fit.backend.dto.response.MessageResponse;
 import nlu.fit.backend.dto.response.UserResponse;
@@ -99,16 +100,16 @@ public class AuthController {
         return ResponseEntity.ok(authService.resendVerificationEmail(email));
     }
 
-    @PostMapping("/confirm-link")
-    public ResponseEntity<AuthResponse> confirmLink(
-            @Valid @RequestBody ConfirmLinkRequest request, 
-            HttpServletResponse response
-    ) {
-        AuthResponse authResponse = authService.confirmAccountLink(request);
-        addRefreshTokenCookie(response, authResponse.getRefreshToken());
-        authResponse.setRefreshToken(null);
-        return ResponseEntity.ok(authResponse);
+    @PostMapping("/forgot-password")
+    public ResponseEntity<MessageResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        return ResponseEntity.ok(authService.forgotPassword(request.getEmail()));
     }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<MessageResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        return ResponseEntity.ok(authService.resetPassword(request.getToken(), request.getNewPassword()));
+    }
+
 
     // Cookie Helper Methods
     private void addRefreshTokenCookie(HttpServletResponse response, String refreshToken) {

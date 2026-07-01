@@ -3,7 +3,6 @@ package nlu.fit.backend.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nlu.fit.backend.dto.mapper.UserMapper;
-import nlu.fit.backend.dto.request.ConfirmLinkRequest;
 import nlu.fit.backend.dto.request.LoginRequest;
 import nlu.fit.backend.dto.request.RegisterRequest;
 import nlu.fit.backend.dto.response.AuthResponse;
@@ -20,6 +19,7 @@ import nlu.fit.backend.exception.UserNotFoundException;
 import nlu.fit.backend.repository.LinkedAccountRepository;
 import nlu.fit.backend.repository.UserRepository;
 import nlu.fit.backend.security.jwt.JwtTokenProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +40,9 @@ public class AuthServiceImpl implements AuthService {
     private final EmailService emailService;
     private final UserMapper userMapper;
     private final SubscriptionService subscriptionService;
+
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
 
     @Override
     @Transactional
@@ -76,6 +79,10 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+
+        if (user.getPassword() == null || user.getPassword().trim().isEmpty()) {
+            throw new InvalidCredentialsException("Tài khoản này được đăng ký qua Google/Facebook. Vui lòng đăng nhập bằng liên kết tương ứng.");
+        }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new InvalidCredentialsException("Invalid email or password");
@@ -172,50 +179,40 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional
-    public AuthResponse confirmAccountLink(ConfirmLinkRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + request.getEmail()));
+    @Transactional(readOnly = true)
+    public MessageResponse forgotPassword(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new InvalidCredentialsException("Invalid password. Verification failed.");
-        }
+        String token = jwtTokenProvider.generatePasswordResetToken(email);
+        String resetUrl = frontendUrl + "/reset-password?token=" + token;
 
-        // Verify if linked account already exists
-        AuthProvider provider = AuthProvider.valueOf(request.getProvider().toUpperCase());
-        Optional<LinkedAccount> existingLink = linkedAccountRepository.findByProviderAndProviderId(
-                provider, request.getProviderId());
+        emailService.sendPasswordResetEmail(user.getEmail(), user.getFullName(), resetUrl);
 
-        if (existingLink.isPresent()) {
-            throw new EmailAlreadyExistsException("This social account is already linked to a user.");
-        }
-
-        // Create and save new LinkedAccount
-        LinkedAccount linkedAccount = LinkedAccount.builder()
-                .user(user)
-                .provider(provider)
-                .providerId(request.getProviderId())
-                .providerEmail(request.getProviderEmail())
-                .providerName(request.getProviderName())
-                .build();
-
-        linkedAccountRepository.save(linkedAccount);
-
-        // Update avatar if user doesn't have one and OAuth profile does
-        if (user.getAvatarUrl() == null && request.getAvatarUrl() != null && !request.getAvatarUrl().trim().isEmpty()) {
-            user.setAvatarUrl(request.getAvatarUrl());
-            userRepository.save(user);
-        }
-
-        log.info("Linked social account ({}) to existing local user: {}", provider, user.getEmail());
-
-        String accessToken = jwtTokenProvider.generateAccessToken(user);
-        String refreshToken = refreshTokenService.createRefreshToken(user.getId());
-
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .user(userMapper.toUserResponse(user))
+        return MessageResponse.builder()
+                .message("Password reset email sent successfully. Please check your inbox.")
                 .build();
     }
+
+    @Override
+    @Transactional
+    public MessageResponse resetPassword(String token, String newPassword) {
+        if (!jwtTokenProvider.validateToken(token)) {
+            throw new InvalidTokenException("Password reset token is invalid or has expired.");
+        }
+
+        String email = jwtTokenProvider.getEmailFromToken(token);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        
+        log.info("Password reset successfully for user: {}", email);
+
+        return MessageResponse.builder()
+                .message("Password has been reset successfully.")
+                .build();
+    }
+
 }
